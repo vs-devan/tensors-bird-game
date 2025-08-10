@@ -1,0 +1,244 @@
+/* main.css: Glassmorphism UI, mobile-optimized, particles background */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto Mono', Arial, sans-serif;
+  background-color: #1a1a1a;
+  color: #ffffff;
+  overflow: hidden;
+  position: relative;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 0.8em;
+  margin: 0.3em 0;
+}
+
+.container {
+  max-width: 1200px;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 0.5em;
+  box-sizing: border-box;
+  align-items: center;
+  margin: 0 auto;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.logo {
+  max-width: 100px;
+  filter: drop-shadow(0 0 10px #2eb191);
+  animation: bounce 1s infinite;
+  margin-bottom: 0.3em;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+h1 { font-size: 1.8em; color: #2eb191; margin: 0.2em 0; }
+p { font-size: 0.9em; margin: 0.2em 0 0.3em; }
+
+.button-group {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5em;
+  margin: 0.5em 0;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.button {
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  background: linear-gradient(135deg, #2eb191, #1a8a6e);
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  border-radius: 50px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 0 15px #2eb191;
+  touch-action: manipulation;
+}
+.button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px #2eb191;
+}
+.button:disabled { background: #ccc; }
+
+#play-button, #signin-button {
+  width: 45%;
+}
+
+form {
+  width: 100%;
+  margin: 0.3em 0;
+  padding: 0 0.5em; /* Add padding to prevent input overflow */
+  box-sizing: border-box; /* Ensure padding doesn't increase width */
+}
+form p { font-size: 0.8em; margin-bottom: 0.3em; }
+form input {
+  display: block;
+  width: calc(100% - 1em);
+  margin: 0.2em 0;
+  padding: 0.5em;
+  border-radius: 8px;
+  border: 1px solid #2eb191;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(46, 177, 145, 0.5);
+  font-size: 0.9em;
+  box-sizing: border-box; 
+}
+form button {
+  width: 100%;
+  font-size: 0.9em;
+  margin-top: 0.3em;
+}
+
+#leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.3em 0;
+  font-size: 0.8em;
+}
+th, td {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.2em;
+  text-align: center;
+}
+.top5 {
+  background: rgba(255, 215, 0, 0.3);
+  font-weight: bold;
+}
+.top5 td:last-child::after {
+  content: "Shortlisted for Interview";
+  color: #2eb191;
+}
+
+.social-buttons {
+  margin: 0.3em 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.3em;
+}
+.social-buttons a {
+  width: 80%;
+  text-align: center;
+  text-decoration: none;
+  flex:1;
+  max-width: 150px;
+}
+
+#game-canvas {
+  display: block;
+  width: 100%;
+  height: 100vh;
+  background: transparent;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+#particles-canvas {
+  width: 100%;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+#leaderboard-table th,
+#leaderboard-table td {
+  width: 25%; /* 4 columns → 100 / 4 */
+  text-align: center; /* optional: center text */
+}
+
+#hud {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(5px);
+  padding: 0.5em;
+  border-radius: 8px;
+  z-index: 10;
+}
+
+#score-display {
+  font-size: 1.2em;
+  color: #2eb191;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+.modal-content {
+  max-width: 80%;
+  text-align: center;
+  align-items: center;
+  padding: 1em; /* Add padding to modal content */
+  background: #1a1a1a;
+  border: 1px solid #2eb191;
+}
+
+/* Mobile Optimization */
+@media (max-width: 768px) {
+  h1 { font-size: 1.6em; }
+  p { font-size: 0.8em; }
+  .button-group { flex-direction: column; gap: 0.3em; }
+  #play-button, #signin-button { width: 70%; font-size: 1.2em; padding: 0.8em; }
+  form input { padding: 0.7em; font-size: 1em; width: calc(100% - 1.4em)}; 
+  form button { font-size: 1em; padding: 0.7em; }
+  #leaderboard-table { font-size: 0.7em; overflow-x: auto; display: block; }
+  .logo { max-width: 80px; }
+  #hud { font-size: 0.7em; padding: 0.3em; }
+  .modal-content { max-width: 95%; }
+  .container { padding: 0.3em; }
+}
+
+#revive-timer {
+  text-align: center; /* Center the text */
+  margin-top: 10px; /* Space between the modal and the timer */
+  font-size: 1.2em; /* Adjust font size as needed */
+  color: #fff; /* Text color, adjust for visibility */
+  position: relative; /* Ensure it flows naturally below the modal */
+}
