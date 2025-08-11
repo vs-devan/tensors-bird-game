@@ -1,105 +1,72 @@
-// backend/models/user.js
-const db = require('../config/db');
+// models/user.js
+const mongoose = require('mongoose');
+const crypto = require('crypto');
 
-const User = {
-  // Create or update user data
-  async createOrUpdate(userData) {
-    try {
-      const { email, name, department, highScore = 0, referralCode = null } = userData;
-      const userRef = db.collection('users').doc(email);
-      await userRef.set(
-        {
-          email,
-          name,
-          department,
-          highScore,
-          referralCode,
-          updatedAt: new Date().toISOString(),
-        },
-        { merge: true }
-      );
-      return { success: true, email };
-    } catch (error) {
-      console.error('Error creating/updating user:', error);
-      return { success: false, error: error.message };
-    }
-  },
+// Helper to generate 7-char key (mix of letters, numbers, and '-')
+function generateSecretKey() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-';
+  let key = '';
+  for (let i = 0; i < 7; i++) {
+    key += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return key;
+}
 
-  // Get user by email
-  async getByEmail(email) {
-    try {
-      const userRef = db.collection('users').doc(email);
-      const doc = await userRef.get();
-      if (!doc.exists) {
-        return { success: false, error: 'User not found' };
-      }
-      return { success: true, data: doc.data() };
-    } catch (error) {
-      console.error('Error fetching user:', error);
-      return { success: false, error: error.message };
-    }
-  },
+const userSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  department: { type: String },
+  highScore: { type: Number, default: 0 },
+  referralCode: { type: String, default: null },
+  secretKey: { type: String, unique: true }, // new field for authentication
+  updatedAt: { type: Date, default: Date.now }
+});
 
-  // Update high score
-  async updateHighScore(email, score) {
-    try {
-      const userRef = db.collection('users').doc(email);
-      await userRef.update({
-        highScore: score,
-        updatedAt: new Date().toISOString(),
+// Static method: create or update user with secret key
+userSchema.statics.createOrUpdate = async function (userData) {
+  try {
+    const { email, name, department, highScore = 0, referralCode = null } = userData;
+
+    let user = await this.findOne({ email });
+    if (!user) {
+      // create new user
+      user = new this({
+        email,
+        name,
+        department,
+        highScore,
+        referralCode,
+        secretKey: generateSecretKey()
       });
-      return { success: true };
-    } catch (error) {
-      console.error('Error updating high score:', error);
-      return { success: false, error: error.message };
+    } else {
+      // update existing user
+      user.name = name || user.name;
+      user.department = department || user.department;
+      user.highScore = highScore || user.highScore;
+      user.referralCode = referralCode || user.referralCode;
     }
-  },
 
-  // Get leaderboard (top 100 users by high score)
-  async getLeaderboard() {
-    try {
-      const snapshot = await db
-        .collection('users')
-        .where('highScore', '>', 0)
-        .orderBy('highScore', 'desc')
-        .limit(100)
-        .get();
-      const leaderboard = snapshot.docs.map((doc, index) => ({
-        rank: index + 1,
-        email: doc.id,
-        name: doc.data().name,
-        department: doc.data().department,
-        highScore: doc.data().highScore,
-      }));
-      return { success: true, data: leaderboard };
-    } catch (error) {
-      console.error('Error fetching leaderboard:', error);
-      return { success: false, error: error.message };
-    }
-  },
+    user.updatedAt = new Date();
+    await user.save();
 
-  // Get top 5 users for shortlisting
-  async getTopFive() {
-    try {
-      const snapshot = await db
-        .collection('users')
-        .where('highScore', '>', 0)
-        .orderBy('highScore', 'desc')
-        .limit(5)
-        .get();
-      const topFive = snapshot.docs.map((doc, index) => ({
-        rank: index + 1,
-        email: doc.id,
-        name: doc.data().name,
-        department: doc.data().department,
-        highScore: doc.data().highScore,
-      }));
-      return { success: true, data: topFive };
-    } catch (error) {
-      console.error('Error fetching top 5:', error);
-      return { success: false, error: error.message };
-    }
-  },
+    return { success: true, secretKey: user.secretKey, email: user.email };
+  } catch (error) {
+    console.error('Error creating/updating user:', error);
+    return { success: false, error: error.message };
+  }
 };
 
+// Static method: login using secret key
+userSchema.statics.loginWithSecretKey = async function (key) {
+  try {
+    const user = await this.findOne({ secretKey: key });
+    if (!user) return { success: false, error: 'Invalid secret key' };
+    return { success: true, data: user };
+  } catch (error) {
+    console.error('Error during login:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+const User = mongoose.model('User', userSchema);
 module.exports = User;

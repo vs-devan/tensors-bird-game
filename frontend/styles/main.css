@@ -3,7 +3,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: 'Roboto Mono', Arial, sans-serif;
-  background-color: #1a1a1a;
+  background-color: #121212;
   color: #ffffff;
   overflow: hidden;
   position: relative;
@@ -11,6 +11,24 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  z-index: 20;
+}
+
+.modal-content {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 8px;
+  min-width: 300px;
 }
 
 .glass {
@@ -21,6 +39,28 @@ body {
   border-radius: 12px;
   padding: 0.8em;
   margin: 0.3em 0;
+}
+
+input, select, button {
+  width: 100%;
+  margin: 6px 0;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+}
+
+.button {
+  cursor: pointer;
+  background: #4CAF50;
+  color: white;
+  font-weight: bold;
+}
+
+#result {
+  margin-top: 20px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
 }
 
 .container {
@@ -35,7 +75,6 @@ body {
   height: 100vh;
   padding: 0.5em;
   box-sizing: border-box;
-  align-items: center;
   margin: 0 auto;
 }
 
@@ -89,7 +128,7 @@ p { font-size: 0.9em; margin: 0.2em 0 0.3em; }
 }
 .button:disabled { background: #ccc; }
 
-#play-button, #signin-button {
+#play-button, #signin-button , #resume-button {
   width: 45%;
 }
 
@@ -199,25 +238,155 @@ th, td {
   color: #2eb191;
 }
 
-.modal {
+/* Sign-in Modal Enhancements */
+#signin-modal, #login-modal {
+  display: none; /* hidden by default */
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+}
+
+#signin-modal .modal-content,
+#login-modal .modal-content {
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
+  padding: 2em;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+  animation: fadeInScale 0.25s ease-out;
+}
+
+#signin-modal h2, #login-modal h2 {
+  margin-bottom: 0.5em;
+  color: #2eb191;
+  font-size: 1.6em;
+}
+
+#signin-modal p, #login-modal p {
+  margin-bottom: 1.5em;
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Inputs & Dropdown */
+#signin-modal input,
+#signin-modal select,
+#login-modal input {
+  width: 100%;
+  margin-bottom: 1em;
+  padding: 0.8em;
+  color: black;
+  border-radius: 8px;
+  border: 1px solid rgba(46, 177, 145, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+  font-size: 0.95em;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#signin-modal input:focus,
+#signin-modal select:focus,
+#login-modal input:focus {
+  outline: none;
+  border-color: #2eb191;
+  box-shadow: 0 0 8px rgba(46, 177, 145, 0.5);
+}
+
+/* Buttons */
+#signin-modal .button,
+#login-modal .button {
+  width: 100%;
+  padding: 0.9em;
+  font-size: 1em;
+  font-weight: bold;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #2eb191, #1a8a6e);
+  color: white;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#signin-modal .button:hover,
+#login-modal .button:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 15px rgba(46, 177, 145, 0.7);
+}
+
+#signin-modal #close-signin,
+#login-modal #close-login {
+  margin-top: 0.8em;
+  background: linear-gradient(135deg, #f44336, #a92e25);
+}
+
+/* Animation */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Popup background */
+.popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  color: black;
+  background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 20;
+  z-index: 1000;
 }
-.modal-content {
-  max-width: 80%;
-  text-align: center;
-  align-items: center;
-  padding: 1em; /* Add padding to modal content */
-  background: #1a1a1a;
-  border: 1px solid #2eb191;
+
+/* Hidden by default */
+.hidden {
+  display: none !important;
+}
+
+/* Popup box */
+.popup-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 350px;
+  color: black;
+  max-width: 90%;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Close button */
+.popup-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 24px;
+  cursor: pointer;
+  color: #555;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 /* Mobile Optimization */
@@ -225,8 +394,8 @@ th, td {
   h1 { font-size: 1.6em; }
   p { font-size: 0.8em; }
   .button-group { flex-direction: column; gap: 0.3em; }
-  #play-button, #signin-button { width: 70%; font-size: 1.2em; padding: 0.8em; }
-  form input { padding: 0.7em; font-size: 1em; width: calc(100% - 1.4em)}; 
+  #play-button, #signin-button, #resume-button  { width: 70%; font-size: 1.2em; padding: 0.8em; }
+  form input { padding: 0.7em; font-size: 1em; width: calc(100% - 1.4em); } 
   form button { font-size: 1em; padding: 0.7em; }
   #leaderboard-table { font-size: 0.7em; overflow-x: auto; display: block; }
   .logo { max-width: 80px; }
@@ -235,10 +404,97 @@ th, td {
   .container { padding: 0.3em; }
 }
 
+/* Smaller mobile tweaks */
+@media (max-width: 480px) {
+  #signin-modal .modal-content,
+  #login-modal .modal-content {
+    padding: 1.2em;
+  }
+  #signin-modal h2,
+  #login-modal h2 {
+    font-size: 1.4em;
+  }
+}
+
 #revive-timer {
   text-align: center; /* Center the text */
   margin-top: 10px; /* Space between the modal and the timer */
   font-size: 1.2em; /* Adjust font size as needed */
   color: #fff; /* Text color, adjust for visibility */
   position: relative; /* Ensure it flows naturally below the modal */
+}
+
+#play-button {
+  display: none;
+}
+
+/* Laptop and desktop optimization */
+@media (min-width: 769px) and (max-width: 1440px) {
+  body {
+    overflow: auto; /* allow scrolling on bigger screens */
+  }
+
+  .container {
+    max-width: 1000px;
+    padding: 1em 2em;
+    margin: 0 auto;
+    height: auto; /* allow natural height */
+    justify-content: flex-start;
+  }
+
+  h1 {
+    font-size: 2.5em;
+  }
+
+  p {
+    font-size: 1.1em;
+  }
+
+  .button-group {
+    flex-direction: row;
+    gap: 1em;
+    width: auto;
+  }
+
+  #play-button,
+  #signin-button,
+  #resume-button {
+    width: auto;
+    min-width: 150px;
+    padding: 0.8em 2em;
+    font-size: 1.1em;
+  }
+
+  #leaderboard-table {
+    font-size: 0.9em;
+    max-width: 800px;
+    margin: 1em 0;
+  }
+
+  .logo {
+    max-width: 150px;
+    margin-bottom: 0.5em;
+  }
+
+  #hud {
+    font-size: 1.1em;
+    padding: 0.7em 1em;
+  }
+
+  form input,
+  form select,
+  form button {
+    font-size: 1em;
+    padding: 0.8em;
+  }
+
+  #game-canvas {
+    width: 100%;
+    height: 100vh;
+  }
+
+  #particles-canvas {
+    width: 100%;
+    height: 100vh;
+  }
 }

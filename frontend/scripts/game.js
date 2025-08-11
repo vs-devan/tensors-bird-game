@@ -1,7 +1,7 @@
 console.log('Starting game.js import');
 
 import { isMobile } from './utils.js';
-import { submitScore } from './api.js';
+import { updateHighScore } from './api.js';
 
 console.log('game.js imports successful');
 
@@ -82,21 +82,21 @@ let isGameOver = false;
 let isPaused = false;
 let birdY = canvas ? canvas.height / 2 : 0;
 let birdVelocity = 0;
-let gravity = 0.5;
-let flapStrength = -10;
+let gravity = 0.2;
+let flapStrength = -8;
 let rotation = 0;
 let obstacles = [];
 let obstructions = [];
 let lives = 1;
 let extraLifeUsed = false;
-let pipeSpeed = 5;
+let pipeSpeed = 1;
 
-const birdX = 100;
+const birdX = 60;
 const birdSize = 40;
 const pipeWidth = 60;
 const pipeGap = 150;
-const pipeMinHeight = 100;
-const pipeSpacing = 300;
+const pipeMinHeight = 60;
+const pipeSpacing = 600;
 const obstructionSize = 30;
 const obstructionSpeed = 5;
 
@@ -322,19 +322,14 @@ function endGame() {
     referralButton.style.display = sessionStorage.getItem('referred') ? 'none' : 'block';
     console.log('Game over: modal shown');
     const user = JSON.parse(localStorage.getItem('user'));
-    if (user && user.email !== 'anonymous') {
-      submitScore(user.name, user.email, user.department, score).then(response => {
-        console.log('submitScore response:', response);
-        if (response.error) {
-          //alert('Failed to submit score: ' + response.error);
-        } else {
-          alert('Score submitted successfully!');
-        }
-      });
-    } else {
-      console.log('Score submission skipped: No user logged in');
-      //alert('Score not submitted. Please login to appear on the leaderboard.');
-    }
+  // Use localStorage stored secretKey automatically
+updateHighScore(score).then(response => {
+  if (response.error) {
+    console.warn('Failed to update score:', response.error);
+  } else {
+    alert('High score updated successfully!');
+  }
+});
   } else {
     resetGame(false, 0);
   }
@@ -445,3 +440,5 @@ function startGame() {
 }
 
 export { startGame };
+
+

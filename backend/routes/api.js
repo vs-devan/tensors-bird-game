@@ -1,89 +1,156 @@
 // backend/routes/api.js
 const express = require('express');
+const { mongoose } = require('../config/db');
 const router = express.Router();
-const User = require('../models/user');
-const { getDepartment } = require('../utils/department');
-
-// Validate IIT Madras email
-const validateEmail = (email) => {
-  return /.*@(smail\.iitm\.ac\.in|iitm\.ac\.in)$/i.test(email);
-};
-
-// POST /api/user - Create or update user
-router.post('/user', async (req, res) => {
-  const { email, name } = req.body;
-  if (!email || !name) {
-    return res.status(400).json({ success: false, error: 'Email and name are required' });
+const User= require('../models/user'); // Assuming you have a User model defined
+// Example Schema & Model
+const crypto = require('crypto');
+// GET all users
+router.get('/users', async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json({ success: true, data: users });
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
-  if (!validateEmail(email)) {
-    return res.status(400).json({ success: false, error: 'Invalid IIT Madras email' });
-  }
-  const department = getDepartment(email);
-  const referralCode = Math.random().toString(36).substring(2, 10); // Generate unique referral code
-  const result = await User.createOrUpdate({ email, name, department, referralCode });
-  if (!result.success) {
-    return res.status(500).json({ success: false, error: result.error });
-  }
-  res.status(200).json({ success: true, data: { email, name, department, referralCode } });
 });
 
-// GET /api/user/:email - Get user by email
-// backend/routes/api.js
-router.get('/user/:email', async (req, res) => {
-  const email = decodeURIComponent(req.params.email); // Decode URL-encoded email
-  if (!validateEmail(email)) {
-    return res.status(400).json({ success: false, error: 'Invalid IIT Madras email' });
+// CREATE a new user
+
+router.post('/users', async (req, res) => {
+  try {
+    const { name, email, department, highScore = 0 } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({ success: false, error: 'Name and email are required' });
+    }
+
+    // Clean referral code: first 8 letters/numbers, uppercase
+    const referralCode = email.replace(/[^a-zA-Z0-9]/g, '').substring(0, 8).toUpperCase();
+
+    // Generate a 6-char random alphanumeric secret key
+    const secretKey = crypto.randomBytes(4) // 4 bytes -> plenty of entropy
+      .toString('base64')                   // convert to base64
+      .replace(/[^a-zA-Z0-9]/g, '')         // remove non-alphanumeric chars
+      .substring(0, 6)                      // take first 6 chars
+      .toUpperCase();
+
+    // Ensure uniqueness in DB
+    const existingKey = await User.findOne({ secretKey });
+    if (existingKey) {
+      return res.status(500).json({ success: false, error: 'Key generation conflict. Try again.' });
+    }
+
+    const user = new User({ name, email, department, highScore, referralCode, secretKey });
+    await user.save();
+
+    res.status(201).json({
+      success: true,
+      data: user,
+      secretKey
+    });
+  } catch (err) {
+    console.error('Error creating user:', err);
+
+    if (err.code === 11000) {
+      return res.status(400).json({ success: false, error: 'Email already exists' });
+    }
+
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
-  const result = await User.getByEmail(email);
-  if (!result.success) {
-    return res.status(404).json({ success: false, error: result.error });
-  }
-  res.status(200).json({ success: true, data: result.data });
 });
 
-// POST /api/score - Update high score
-router.post('/score', async (req, res) => {
-  const { email, score } = req.body;
-  if (!email || typeof score !== 'number') {
-    return res.status(400).json({ success: false, error: 'Email and score are required' });
+
+// GET top 10 users by high score
+router.get('/users/top10', async (req, res) => {
+  try {
+    const topUsers = await User.find({ highScore: { $gt: 0 } })
+      .sort({ highScore: -1 }) // Sort descending
+      .limit(10)
+      .select('name email department highScore referralCode updatedAt');
+
+    res.json({ success: true, data: topUsers });
+  } catch (err) {
+    console.error('Error fetching top 10 users:', err);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
-  if (!validateEmail(email)) {
-    return res.status(400).json({ success: false, error: 'Invalid IIT Madras email' });
-  }
-  const result = await User.updateHighScore(email, score);
-  if (!result.success) {
-    return res.status(500).json({ success: false, error: result.error });
-  }
-  res.status(200).json({ success: true });
 });
 
-// GET /api/leaderboard - Get leaderboard
-router.get('/leaderboard', async (req, res) => {
-  const result = await User.getLeaderboard();
-  if (!result.success) {
-    return res.status(500).json({ success: false, error: result.error });
+
+
+router.post('/users/login', async (req, res) => {
+  try {
+    const { secretKey } = req.body;
+    if (!secretKey) {
+      return res.status(400).json({ success: false, error: 'Secret key required' });
+    }
+
+    const result = await User.loginWithSecretKey(secretKey);
+    if (!result.success) {
+      return res.status(401).json(result);
+    }
+
+    res.json({ success: true, data: result.data });
+  } catch (err) {
+    console.error('Error logging in:', err);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
-  res.status(200).json({ success: true, data: result.data });
 });
 
-// POST /api/referral - Validate referral and grant extra life
-router.post('/referral', async (req, res) => {
-  const { referralCode, email } = req.body;
-  if (!referralCode || !email) {
-    return res.status(400).json({ success: false, error: 'Referral code and email are required' });
+// UPDATE high score using secretKey
+router.put('/users/update-score', async (req, res) => {
+  try {
+    const { secretKey, highScore } = req.body;
+
+    if (!secretKey) {
+      return res.status(400).json({ success: false, error: 'Secret key required' });
+    }
+    if (typeof highScore !== 'number') {
+      return res.status(400).json({ success: false, error: 'High score must be a number' });
+    }
+
+    const user = await User.findOne({ secretKey });
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    if (highScore > user.highScore) {
+      user.highScore = highScore;
+      user.updatedAt = new Date();
+      await user.save();
+    }
+
+    res.json({ success: true, data: user });
+  } catch (err) {
+    console.error('Error updating high score:', err);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
-  if (!validateEmail(email)) {
-    return res.status(400).json({ success: false, error: 'Invalid IIT Madras email' });
+});
+
+
+
+
+
+// DELETE a user by ID
+router.delete('/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, error: 'Invalid user ID' });
+    }
+
+    const deletedUser = await User.findByIdAndDelete(id);
+    if (!deletedUser) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting user:', err);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
-  // Check if referral code exists
-  const snapshot = await User.collection('users')
-    .where('referralCode', '==', referralCode)
-    .get();
-  if (snapshot.empty) {
-    return res.status(400).json({ success: false, error: 'Invalid referral code' });
-  }
-  // In a real implementation, track referral usage (e.g., one per session) in Firestore
-  res.status(200).json({ success: true, extraLife: true });
 });
 
 module.exports = router;
