@@ -26,15 +26,8 @@ router.post('/users', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Name and email are required' });
     }
 
-    // Clean referral code: first 8 letters/numbers, uppercase
-    const referralCode = email.replace(/[^a-zA-Z0-9]/g, '').substring(0, 8).toUpperCase();
-
-    // Generate a 6-char random alphanumeric secret key
-    const secretKey = crypto.randomBytes(4) // 4 bytes -> plenty of entropy
-      .toString('base64')                   // convert to base64
-      .replace(/[^a-zA-Z0-9]/g, '')         // remove non-alphanumeric chars
-      .substring(0, 6)                      // take first 6 chars
-      .toUpperCase();
+    // Generate secret key: first 8 letters/numbers from email, uppercase
+    const secretKey = email.replace(/[^a-zA-Z0-9]/g, '').substring(0, 8).toUpperCase();
 
     // Ensure uniqueness in DB
     const existingKey = await User.findOne({ secretKey });
@@ -42,7 +35,7 @@ router.post('/users', async (req, res) => {
       return res.status(500).json({ success: false, error: 'Key generation conflict. Try again.' });
     }
 
-    const user = new User({ name, email, department, highScore, referralCode, secretKey });
+    const user = new User({ name, email, department, highScore, secretKey });
     await user.save();
 
     res.status(201).json({
@@ -86,7 +79,10 @@ router.post('/users/login', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Secret key required' });
     }
 
-    const result = await User.loginWithSecretKey(secretKey);
+    // Convert secretKey to uppercase
+    const upperCaseSecretKey = secretKey.toUpperCase();
+
+    const result = await User.loginWithSecretKey(upperCaseSecretKey);
     if (!result.success) {
       return res.status(401).json(result);
     }

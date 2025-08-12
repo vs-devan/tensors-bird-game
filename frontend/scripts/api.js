@@ -2,7 +2,6 @@ console.log('api.js loaded');
 
 const API_BASE = 'http://localhost:5000/api'; // change to your backend URL
 
-// Elements
 const signinModal = document.getElementById('signin-modal');
 const loginModal = document.getElementById('login-modal');
 const startPage = document.getElementById('start-page');
@@ -131,33 +130,34 @@ signinForm.addEventListener('submit', async (e) => {
       return;
     }
 
-    currentUser = data.user;
-    authToken = data.token;
+  currentUser = data.data; // backend sends user object as data
+authToken = data.secretKey; // store secret key from backend
+localStorage.setItem('secretKey', authToken);
 
     hideSigninModal();
     enablePlayButton();
     startPage.style.display = 'flex';
+showPopup(`
+  <div style="
+    background: #e6ffed;
+    border: 1px solid #b7eb8f;
+    padding: 15px 20px;
+    border-radius: 8px;
+    color: #135200;
+    font-family: Arial, sans-serif;
+    max-width: 350px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  ">
+    <h3 style="margin-top: 0; color: #237804;">✅ Successfully Registered!</h3>
+    <p style="margin: 6px 0;"><b>Name:</b> ${currentUser.name}</p>
+    <p style="margin: 6px 0;"><b>Email:</b> ${currentUser.email}</p>
+    <p style="margin: 6px 0; background: #fffbe6; padding: 5px 8px; border-radius: 5px; border: 1px dashed #faad14;">
+      <b>Secret Key:</b> ${authToken}
+    </p>
+    <small style="color: #8c8c8c;">💾 Save this key to resume your game later.</small>
+  </div>
+`);
 
-    showPopup(`
-      <div style="
-        background: #e6ffed;
-        border: 1px solid #b7eb8f;
-        padding: 15px 20px;
-        border-radius: 8px;
-        color: #135200;
-        font-family: Arial, sans-serif;
-        max-width: 350px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-      ">
-        <h3 style="margin-top: 0; color: #237804;">✅ Account Created Successfully!</h3>
-        <p style="margin: 6px 0;"><b>Name:</b> ${currentUser.name}</p>
-        <p style="margin: 6px 0;"><b>Email:</b> ${currentUser.email}</p>
-        <p style="margin: 6px 0; background: #fffbe6; padding: 5px 8px; border-radius: 5px; border: 1px dashed #faad14;">
-          <b>Secret Key:</b> ${authToken}
-        </p>
-        <small style="color: #8c8c8c;">💾 Save this key to resume your game later.</small>
-      </div>
-    `);
 
     fetchLeaderboard();
   } catch (err) {

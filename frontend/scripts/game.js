@@ -49,6 +49,8 @@ obstructionImg.onerror = () => console.error('Obstruction image failed to load')
 // Web Audio API for sounds (low latency)
 const audioContext = new AudioContext();
 
+
+
 async function loadAudio(url) {
   try {
     const response = await fetch(url);
@@ -82,23 +84,24 @@ let isGameOver = false;
 let isPaused = false;
 let birdY = canvas ? canvas.height / 2 : 0;
 let birdVelocity = 0;
-let gravity = 0.2;
-let flapStrength = -8;
+let gravity = 0.5;
+let flapStrength = -10;
 let rotation = 0;
 let obstacles = [];
 let obstructions = [];
 let lives = 1;
 let extraLifeUsed = false;
-let pipeSpeed = 1;
+let pipeSpeed = 5;
 
-const birdX = 60;
+const birdX = 100;
 const birdSize = 40;
 const pipeWidth = 60;
 const pipeGap = 150;
-const pipeMinHeight = 60;
-const pipeSpacing = 600;
+const pipeMinHeight = 100;
+const pipeSpacing = 5000;
 const obstructionSize = 30;
 const obstructionSpeed = 5;
+
 
 let lastPipeSpawn = 0;
 
@@ -162,7 +165,7 @@ function gameLoop(timestamp = 0) {
   pipeSpeed = 5 + Math.floor(score / 500);
   console.log(`Pipe speed updated: ${pipeSpeed}`);
 
-  if ((timestamp - lastPipeSpawn > pipeSpacing / pipeSpeed * 5) && (Math.random() < 0.02)) {
+  if ((timestamp - lastPipeSpawn > pipeSpacing / pipeSpeed * 5) && Math.random() < 0.08) {
     const gapY = Math.random() * (canvas.height - pipeGap - 2 * pipeMinHeight) + pipeMinHeight;
     obstacles.push({ x: canvas.width, gapY, cleared: false });
     lastPipeSpawn = timestamp;
@@ -440,5 +443,6 @@ function startGame() {
 }
 
 export { startGame };
+
 
 
