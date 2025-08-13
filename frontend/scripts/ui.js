@@ -1,7 +1,7 @@
 console.log('Starting ui.js import');
 
 import { getDepartment, isValidIITMEmail, isMobile } from './utils.js';
-// import { fetchLeaderboard } from './api.js';
+import { fetchLeaderboard } from './api.js';
 import { startGame } from './game.js';
 
 console.log('ui.js imports successful');
@@ -28,33 +28,29 @@ if (!leaderboardBody) console.error('Leaderboard body not found in DOM');
 
 async function loadLeaderboard() {
   console.log('loadLeaderboard called');
-  // Dummy data for testing
-  const dummyData = [
-    { name: 'Alice', department: 'CS', highScore: 1500, email: 'cs@smail.iitm.ac.in' },
-    { name: 'Bob', department: 'EE', highScore: 1400, email: 'ee@smail.iitm.ac.in' },
-    { name: 'Charlie', department: 'ME', highScore: 1300, email: 'me@smail.iitm.ac.in' },
-    { name: 'David', department: 'ED', highScore: 1200, email: 'ed@smail.iitm.ac.in' },
-    { name: 'Emma', department: 'CH', highScore: 1100, email: 'ch@smail.iitm.ac.in' },
-    { name: 'Frank', department: 'CS', highScore: 1000, email: 'cs@smail.iitm.ac.in' },
-    { name: 'Grace', department: 'CE', highScore: 900, email: 'ce@smail.iitm.ac.in' },
-    { name: 'Henry', department: 'BT', highScore: 800, email: 'bt@smail.iitm.ac.in' },
-    { name: 'Ivy', department: 'EE', highScore: 700, email: 'ee@smail.iitm.ac.in' },
-    { name: 'Jack', department: 'CS', highScore: 600, email: 'cs@smail.iitm.ac.in' }
-  ];
-  leaderboardBody.innerHTML = '';
-  dummyData.forEach((entry, index) => {
-    const row = document.createElement('tr');
-    row.classList.add(index < 5 && isValidIITMEmail(entry.email) ? 'top5' : '');
-    row.innerHTML = `
-      <td>${index + 1}</td>
-      <td>${entry.name} (${entry.department})</td>
 
-      <td>${entry.highScore}</td>
-      <td>${index < 10 && isValidIITMEmail(entry.email) ? '' : ''}</td>
-    `;
-    leaderboardBody.appendChild(row);
-  });
-  console.log('Leaderboard populated with dummy data');
+  try {
+    const leaderboardData = await fetchLeaderboard(); // Call API function
+
+    leaderboardBody.innerHTML = '';
+    leaderboardData.forEach((entry, index) => {
+      const row = document.createElement('tr');
+      if (index < 5 && isValidIITMEmail(entry.email)) {
+        row.classList.add('top5');
+      }
+      row.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${entry.name} (${entry.department})</td>
+        <td>${entry.highScore}</td>
+        <td>${index < 10 && isValidIITMEmail(entry.email) ? '' : ''}</td>
+      `;
+      leaderboardBody.appendChild(row);
+    });
+
+    console.log('Leaderboard populated from API');
+  } catch (err) {
+    console.error('Error loading leaderboard:', err);
+  }
 }
 
 loadLeaderboard();
