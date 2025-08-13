@@ -1,6 +1,6 @@
 console.log('api.js loaded');
 
-const API_BASE = 'http://localhost:5000/api'; // change to your backend URL
+const API_BASE = 'https://tensors-bird-game-faep.onrender.com/api'; // change to your backend URL
 
 const signinModal = document.getElementById('signin-modal');
 const loginModal = document.getElementById('login-modal');
