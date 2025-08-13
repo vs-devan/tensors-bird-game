@@ -1,7 +1,7 @@
 console.log('Starting ui.js import');
 
 import { getDepartment, isValidIITMEmail, isMobile } from './utils.js';
-import { fetchLeaderboard } from './api.js';
+// import { fetchLeaderboard } from './api.js';
 import { startGame } from './game.js';
 
 console.log('ui.js imports successful');

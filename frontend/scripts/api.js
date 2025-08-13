@@ -1,6 +1,7 @@
 console.log('api.js loaded');
 
-const API_BASE = 'https://tensors-bird-game-faep.onrender.com/api'; // change to your backend URL
+const API_BASE = 'https://tensors-bird-game-faep.onrender.com/api';
+// const API_BASE = 'http://localhost:5000/api';
 
 const signinModal = document.getElementById('signin-modal');
 const loginModal = document.getElementById('login-modal');
@@ -48,7 +49,15 @@ function hideLoginModal() { hideElement(loginModal); }
 function enablePlayButton() { playButton.style.display = 'inline-block'; }
 function disablePlayButton() { playButton.style.display = 'none'; }
 
+function hideAuthButtons() {
+  signinButton.style.display = 'none';
+  resumeButton.style.display = 'none';
+}
 
+function showAuthButtons() {
+  signinButton.style.display = 'inline-block';
+  resumeButton.style.display = 'inline-block';
+}
 
 // ===================== Update High Score =====================
 export async function updateHighScore(highScore) {
@@ -77,10 +86,8 @@ export async function updateHighScore(highScore) {
   }
 }
 
-
-
 // ----------------- Leaderboard -----------------
-async function fetchLeaderboard() {
+export async function fetchLeaderboard() {
   try {
     const res = await fetch(`${API_BASE}/users/top10`);
     if (!res.ok) throw new Error('Failed to fetch leaderboard');
@@ -110,8 +117,8 @@ signinForm.addEventListener('submit', async (e) => {
 
   const name = document.getElementById('signin-name-input').value.trim();
   const email = document.getElementById('signin-email-input').value.trim();
-  const department = document.getElementById('signin-dept-input').value;
-
+  const department = email.slice(0, 2).toUpperCase();
+  
   if (!name || !email || !department) {
     alert('Please fill all fields');
     return;
@@ -130,34 +137,35 @@ signinForm.addEventListener('submit', async (e) => {
       return;
     }
 
-  currentUser = data.data; // backend sends user object as data
-authToken = data.secretKey; // store secret key from backend
-localStorage.setItem('secretKey', authToken);
+    currentUser = data.data; // backend sends user object as data
+    authToken = data.secretKey; // store secret key from backend
+    localStorage.setItem('secretKey', authToken);
 
     hideSigninModal();
     enablePlayButton();
+    hideAuthButtons();
     startPage.style.display = 'flex';
-showPopup(`
-  <div style="
-    background: #e6ffed;
-    border: 1px solid #b7eb8f;
-    padding: 15px 20px;
-    border-radius: 8px;
-    color: #135200;
-    font-family: Arial, sans-serif;
-    max-width: 350px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-  ">
-    <h3 style="margin-top: 0; color: #237804;">✅ Successfully Registered!</h3>
-    <p style="margin: 6px 0;"><b>Name:</b> ${currentUser.name}</p>
-    <p style="margin: 6px 0;"><b>Email:</b> ${currentUser.email}</p>
-    <p style="margin: 6px 0; background: #fffbe6; padding: 5px 8px; border-radius: 5px; border: 1px dashed #faad14;">
-      <b>Secret Key:</b> ${authToken}
-    </p>
-    <small style="color: #8c8c8c;">💾 Save this key to resume your game later.</small>
-  </div>
-`);
 
+    showPopup(`
+      <div style="
+        background: #e6ffed;
+        border: 1px solid #b7eb8f;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: #135200;
+        font-family: Arial, sans-serif;
+        max-width: 350px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      ">
+        <h3 style="margin-top: 0; color: #237804;">✅ Successfully Registered!</h3>
+        <p style="margin: 6px 0;"><b>Name:</b> ${currentUser.name}</p>
+        <p style="margin: 6px 0;"><b>Email:</b> ${currentUser.email}</p>
+        <p style="margin: 6px 0; background: #fffbe6; padding: 5px 8px; border-radius: 5px; border: 1px dashed #faad14;">
+          <b>Secret Key:</b> ${authToken}
+        </p>
+        <small style="color: #8c8c8c;">💾 Save this key to resume your game later.</small>
+      </div>
+    `);
 
     fetchLeaderboard();
   } catch (err) {
@@ -192,9 +200,11 @@ loginForm.addEventListener('submit', async (e) => {
 
     currentUser = data.data || data.user;
     authToken = secretKey;
-localStorage.setItem('secretKey', authToken);
+    localStorage.setItem('secretKey', authToken);
+
     hideLoginModal();
     enablePlayButton();
+    hideAuthButtons();
     startPage.style.display = 'flex';
 
     showPopup(`Welcome back ${currentUser.name}! You can now play your game.`);
@@ -251,9 +261,18 @@ popupCloseBtn.addEventListener('click', () => { hidePopup(); });
 
 // ----------------- Init -----------------
 window.addEventListener('load', () => {
-  disablePlayButton();
   hideSigninModal();
   hideLoginModal();
   hidePopup();
   fetchLeaderboard();
+
+  const savedKey = localStorage.getItem('secretKey');
+  if (savedKey) {
+    authToken = savedKey;
+    hideAuthButtons();
+    enablePlayButton();
+  } else {
+    showAuthButtons();
+    disablePlayButton();
+  }
 });

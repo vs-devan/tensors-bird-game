@@ -12,25 +12,25 @@ const gameOverModal = document.getElementById('game-over-modal');
 const finalScore = document.getElementById('final-score');
 const restartButton = document.getElementById('restart-button');
 const referralButton = document.getElementById('referral-button');
-const menuButton = document.getElementById('menu-button');
-const milestoneModal = document.getElementById('milestone-modal');
+// const menuButton = document.getElementById('menu-button');
+// const milestoneModal = document.getElementById('milestone-modal');
 const closeMilestone = document.getElementById('close-milestone');
-const milestoneForm = document.getElementById('milestone-form');
-const milestoneNameInput = document.getElementById('milestone-name-input');
-const milestoneEmailInput = document.getElementById('milestone-email-input');
-const milestonePhoneInput = document.getElementById('milestone-phone-input');
+// const milestoneForm = document.getElementById('milestone-form');
+// const milestoneNameInput = document.getElementById('milestone-name-input');
+// const milestoneEmailInput = document.getElementById('milestone-email-input');
+// const milestonePhoneInput = document.getElementById('milestone-phone-input');
 
 if (!canvas || !ctx) console.error('Canvas or context not initialized');
 if (!scoreDisplay) console.error('Score display not found');
 if (!gameOverModal) console.error('Game over modal not found');
 if (!restartButton) console.error('Restart button not found');
 if (!referralButton) console.error('Referral button not found');
-if (!menuButton) console.error('Menu button not found');
-if (!milestoneModal) console.error('Milestone modal not found');
-if (!milestoneForm) console.error('Milestone form not found');
-if (!milestoneNameInput) console.error('Milestone name input not found');
-if (!milestoneEmailInput) console.error('Milestone email input not found');
-if (!milestonePhoneInput) console.error('Milestone phone input not found');
+// if (!menuButton) console.error('Menu button not found');
+// if (!milestoneModal) console.error('Milestone modal not found');
+// if (!milestoneForm) console.error('Milestone form not found');
+// if (!milestoneNameInput) console.error('Milestone name input not found');
+// if (!milestoneEmailInput) console.error('Milestone email input not found');
+// if (!milestonePhoneInput) console.error('Milestone phone input not found');
 
 const birdImg = new Image(); birdImg.src = 'assets/tensors-logo-running.png';
 const pipeTopImg = new Image(); pipeTopImg.src = 'assets/tower-top.svg';
@@ -104,6 +104,12 @@ const obstructionSpeed = 5;
 
 
 let lastPipeSpawn = 0;
+
+function updateLivesDisplay() {
+  const livesDisplay = document.getElementById('lives-display');
+  if (livesDisplay) livesDisplay.innerText = `Lives: ${lives}`;
+}
+
 
 function resizeCanvas() {
   if (canvas) {
@@ -282,57 +288,84 @@ closeMilestone.addEventListener('click', () => {
   gameLoop();
 });
 
-milestoneForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  console.log('Milestone form submitted');
-  const name = milestoneNameInput.value.trim();
-  const email = milestoneEmailInput.value.trim();
-  const phone = milestonePhoneInput.value.trim();
+// milestoneForm.addEventListener('submit', (e) => {
+//   e.preventDefault();
+//   console.log('Milestone form submitted');
+//   const name = milestoneNameInput.value.trim();
+//   const email = milestoneEmailInput.value.trim();
+//   const phone = milestonePhoneInput.value.trim();
 
-  if (!name || !email || !phone) {
-    alert('Please enter name, email, and phone.');
-    console.log('Milestone submission failed: Missing fields');
-    return;
-  }
-  if (!isValidIITMEmail(email)) {
-    alert('Please use a valid IIT Madras email.');
-    console.log('Milestone submission failed: Invalid email');
-    return;
-  }
+//   if (!name || !email || !phone) {
+//     alert('Please enter name, email, and phone.');
+//     console.log('Milestone submission failed: Missing fields');
+//     return;
+//   }
+//   if (!isValidIITMEmail(email)) {
+//     alert('Please use a valid IIT Madras email.');
+//     console.log('Milestone submission failed: Invalid email');
+//     return;
+//   }
 
-  const department = getDepartment(email);
-  localStorage.setItem('user', JSON.stringify({ name, email, department }));
-  milestoneModal.style.display = 'none';
-  // Trigger confetti effect
-  confetti({
-    particleCount: 100,
-    spread: 70,
-    origin: { y: 0.6 },
-    colors: ['#2eb191', '#ffd700', '#ff4d4d'],
-  });
-  console.log('Confetti triggered for milestone submission');
-  isPaused = false;
-  gameLoop();
-});
+//   const department = getDepartment(email);
+//   localStorage.setItem('user', JSON.stringify({ name, email, department }));
+//   milestoneModal.style.display = 'none';
+//   // Trigger confetti effect
+//   confetti({
+//     particleCount: 100,
+//     spread: 70,
+//     origin: { y: 0.6 },
+//     colors: ['#2eb191', '#ffd700', '#ff4d4d'],
+//   });
+//   console.log('Confetti triggered for milestone submission');
+//   isPaused = false;
+//   gameLoop();
+// });
 
 function endGame() {
   lives--;
   console.log(`Life lost: lives=${lives}`);
+  updateLivesDisplay(); // Make sure you have this helper to refresh UI
+
   if (lives <= 0) {
+    lives = 0;
     isGameOver = true;
     finalScore.textContent = score;
     gameOverModal.style.display = 'flex';
+
+    // Show refer button only if not referred before
     referralButton.style.display = sessionStorage.getItem('referred') ? 'none' : 'block';
+
+    // Set up referral click event
+    referralButton.onclick = () => {
+      const gameLink = "https://tensors-bird-game.netlify.app/"; // replace with your real game URL
+      const message = encodeURIComponent(`Hey! Try this awesome game: ${gameLink}`);
+
+      window.open(`https://wa.me/?text=${message}`, '_blank');
+
+      if (!sessionStorage.getItem('referred')) {
+        lives = 1;
+        updateLivesDisplay();
+        alert("🎉 You earned 1 extra life!");
+        sessionStorage.setItem('referred', 'true');
+
+        gameOverModal.style.display = 'none';
+        startGame(currentUser, authToken);
+      }
+    };
+
     console.log('Game over: modal shown');
+
     const user = JSON.parse(localStorage.getItem('user'));
-  // Use localStorage stored secretKey automatically
-updateHighScore(score).then(response => {
-  if (response.error) {
-    console.warn('Failed to update score:', response.error);
-  } else {
-    alert('High score updated successfully!');
-  }
-});
+
+    // Use localStorage stored secretKey automatically
+    updateHighScore(score).then(response => {
+      if (response.error) {
+        console.warn('Failed to update score:', response.error);
+      } else {
+        alert('High score updated successfully!');
+      }
+    });
+
   } else {
     resetGame(false, 0);
   }
@@ -396,15 +429,15 @@ function startReviveTimer() {
   }, 1000);
 }
 
-menuButton.addEventListener('click', () => {
-  gameOverModal.style.display = 'none';
-  canvas.style.display = 'none';
-  hud.style.display = 'none';
-  document.getElementById('start-page').style.display = 'flex';
-  isGameOver = true;
-  sessionStorage.removeItem('referred');
-  console.log('Back to menu clicked, game stopped, referral reset');
-});
+// menuButton.addEventListener('click', () => {
+//   gameOverModal.style.display = 'none';
+//   canvas.style.display = 'none';
+//   hud.style.display = 'none';
+//   document.getElementById('start-page').style.display = 'flex';
+//   isGameOver = true;
+//   sessionStorage.removeItem('referred');
+//   console.log('Back to menu clicked, game stopped, referral reset');
+// });
 
 function resetGame(clearLives = true, score1 = 0) {
   score = score1;
