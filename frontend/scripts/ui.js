@@ -110,7 +110,8 @@ playButton.addEventListener('click', () => {
 
 const particlesCanvas = document.getElementById('particles-canvas');
 const particlesCtx = particlesCanvas && particlesCanvas.getContext('2d');
-if (!particlesCtx) console.error('Particles canvas context not found');
+if (!particlesCanvas) console.error('Particles canvas not found');
+else particlesCanvas.style.display = 'block'; // Make sure it's visible
 
 let particles = [];
 
@@ -151,6 +152,7 @@ function resizeParticles() {
     particlesCanvas.height = window.innerHeight;
     console.log(`Particles canvas resized: ${particlesCanvas.width}x${particlesCanvas.height}`);
     createParticles();
+    if (particlesCtx) drawParticles();
   }
 }
 
