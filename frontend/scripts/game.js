@@ -296,9 +296,10 @@ function showMilestone() {
 closeMilestone.addEventListener('click', () => {
   milestoneModal.style.display = 'none';
   isPaused = false;
+  milestoneShown = true;
   console.log('Milestone modal closed');
-  // Always resume the game loop after closing milestone
-  gameLoop();
+  // Resume game safely after milestone by resetting with current score and lives
+  resetGame(false, score);
 });
 
 function endGame() {
