@@ -29,11 +29,6 @@ if (!gameOverModal) console.error('Game over modal not found');
 if (!restartButton) console.error('Restart button not found');
 if (!referralButton) console.error('Referral button not found');
 if (!menuButton) console.error('Menu button not found');
-// if (!milestoneModal) console.error('Milestone modal not found');
-// if (!milestoneForm) console.error('Milestone form not found');
-// if (!milestoneNameInput) console.error('Milestone name input not found');
-// if (!milestoneEmailInput) console.error('Milestone email input not found');
-// if (!milestonePhoneInput) console.error('Milestone phone input not found');
 
 const birdImg = new Image(); birdImg.src = 'assets/tensors-logo-running.png';
 const pipeTopImg = new Image(); pipeTopImg.src = 'assets/tower-top.svg';
@@ -302,7 +297,8 @@ closeMilestone.addEventListener('click', () => {
   milestoneModal.style.display = 'none';
   isPaused = false;
   console.log('Milestone modal closed');
-  if (!isGameOver) gameLoop();
+  // Always resume the game loop after closing milestone
+  gameLoop();
 });
 
 function endGame() {
