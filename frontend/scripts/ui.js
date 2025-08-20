@@ -78,18 +78,19 @@ signinForm.addEventListener('submit', (e) => {
     console.log('Signin failed: Missing name or email');
     return;
   }
+
   if (!isValidIITMEmail(email)) {
     alert('Please use a valid IIT Madras email (e.g., @smail.iitm.ac.in or @iitm.ac.in).');
     console.log('Signin failed: Invalid email');
     return;
+  } else {
+    const department = getDepartment(email);
+    localStorage.setItem('user', JSON.stringify({ name, email, department }));
+    alert('Login successful! Your scores will appear on the leaderboard.');
+    console.log('Signin successful:', { name, email, department });
+    signinModal.style.display = 'none';
+    loadLeaderboard();
   }
-
-  const department = getDepartment(email);
-  localStorage.setItem('user', JSON.stringify({ name, email, department }));
-  alert('Login successful! Your scores will appear on the leaderboard.');
-  console.log('Signin successful:', { name, email, department });
-  signinModal.style.display = 'none';
-  loadLeaderboard();
 });
 
 closeSignin.addEventListener('click', () => {
