@@ -13,12 +13,15 @@ const finalScore = document.getElementById('final-score');
 const restartButton = document.getElementById('restart-button');
 const referralButton = document.getElementById('referral-button');
 const menuButton = document.getElementById('menu-button');
+const hud = document.getElementById('hud');
 const milestoneModal = document.getElementById('milestone-modal');
 const closeMilestone = document.getElementById('close-milestone');
 const milestoneForm = document.getElementById('milestone-form');
 const milestoneNameInput = document.getElementById('milestone-name-input');
 const milestoneEmailInput = document.getElementById('milestone-email-input');
 const milestonePhoneInput = document.getElementById('milestone-phone-input');
+const referModal = document.getElementById('refer-modal');
+const closeRefer = document.getElementById('close-refer');
 
 if (!canvas || !ctx) console.error('Canvas or context not initialized');
 if (!scoreDisplay) console.error('Score display not found');
@@ -26,11 +29,11 @@ if (!gameOverModal) console.error('Game over modal not found');
 if (!restartButton) console.error('Restart button not found');
 if (!referralButton) console.error('Referral button not found');
 if (!menuButton) console.error('Menu button not found');
-if (!milestoneModal) console.error('Milestone modal not found');
-if (!milestoneForm) console.error('Milestone form not found');
-if (!milestoneNameInput) console.error('Milestone name input not found');
-if (!milestoneEmailInput) console.error('Milestone email input not found');
-if (!milestonePhoneInput) console.error('Milestone phone input not found');
+// if (!milestoneModal) console.error('Milestone modal not found');
+// if (!milestoneForm) console.error('Milestone form not found');
+// if (!milestoneNameInput) console.error('Milestone name input not found');
+// if (!milestoneEmailInput) console.error('Milestone email input not found');
+// if (!milestonePhoneInput) console.error('Milestone phone input not found');
 
 const birdImg = new Image(); birdImg.src = 'assets/tensors-logo-running.png';
 const pipeTopImg = new Image(); pipeTopImg.src = 'assets/tower-top.svg';
@@ -49,8 +52,6 @@ obstructionImg.onerror = () => console.error('Obstruction image failed to load')
 // Web Audio API for sounds (low latency)
 const audioContext = new AudioContext();
 
-
-
 async function loadAudio(url) {
   try {
     const response = await fetch(url);
@@ -68,7 +69,10 @@ const flapBufferPromise = loadAudio('assets/flap-sound.mp3');
 const failBufferPromise = loadAudio('assets/fail-sound.mp3');
 const congratsBufferPromise = loadAudio('assets/congrats-sound.mp3');
 
-function playSound(bufferPromise) {
+async function playSound(bufferPromise) {
+  if (audioContext.state === 'suspended') {
+    await audioContext.resume();
+  }
   bufferPromise.then(buffer => {
     if (buffer) {
       const source = audioContext.createBufferSource();
@@ -100,10 +104,14 @@ const pipeGap = 150;
 const pipeMinHeight = 100;
 const pipeSpacing = 5000;
 const obstructionSize = 30;
-const obstructionSpeed = 5;
-
 
 let lastPipeSpawn = 0;
+
+function updateLivesDisplay() {
+  const livesDisplay = document.getElementById('lives-display');
+  if (livesDisplay) livesDisplay.innerText = `Lives: ${lives}`;
+}
+
 
 function resizeCanvas() {
   if (canvas) {
@@ -141,6 +149,8 @@ if (isMobile()) {
   });
 }
 
+let animationFrameId = null;
+
 function gameLoop(timestamp = 0) {
   if (isGameOver || isPaused || !ctx) {
     console.log(`Game loop stopped: isGameOver=${isGameOver}, isPaused=${isPaused}, ctx=${!!ctx}`);
@@ -149,6 +159,9 @@ function gameLoop(timestamp = 0) {
 
   console.log('Game loop running');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Increase speed based on score
+  pipeSpeed = 5 + Math.floor(score / 1000);
 
   birdVelocity += gravity;
   birdY += birdVelocity;
@@ -162,20 +175,19 @@ function gameLoop(timestamp = 0) {
   ctx.restore();
   console.log(`Bird drawn: x=${birdX}, y=${birdY}, rotation=${rotation}`);
 
-  pipeSpeed = 5 + Math.floor(score / 500);
-  console.log(`Pipe speed updated: ${pipeSpeed}`);
-
-  if ((timestamp - lastPipeSpawn > pipeSpacing / pipeSpeed * 5) && Math.random() < 0.08) {
-    const gapY = Math.random() * (canvas.height - pipeGap - 2 * pipeMinHeight) + pipeMinHeight;
-    obstacles.push({ x: canvas.width, gapY, cleared: false });
+  if ((timestamp - lastPipeSpawn > pipeSpacing / pipeSpeed) && Math.random() < 0.04) {
+    const dynamicGap = Math.max(80, pipeGap - Math.floor(score / 200)); // Minimum gap is 80
+    const gapY = Math.random() * (canvas.height - dynamicGap - 2 * pipeMinHeight) + pipeMinHeight;
+    obstacles.push({ x: canvas.width, gapY, cleared: false, gap: dynamicGap });
     lastPipeSpawn = timestamp;
     console.log(`Pipe spawned: x=${canvas.width}, gapY=${gapY}`);
   }
 
   obstacles.forEach((obs, i) => {
+    const gap = obs.gap || pipeGap;
     obs.x -= pipeSpeed;
-    ctx.drawImage(pipeTopImg, obs.x, obs.gapY - pipeGap / 2 - canvas.height, pipeWidth, canvas.height);
-    ctx.drawImage(pipeBottomImg, obs.x, obs.gapY + pipeGap / 2, pipeWidth, canvas.height);
+    ctx.drawImage(pipeTopImg, obs.x, obs.gapY - gap / 2 - canvas.height, pipeWidth, canvas.height);
+    ctx.drawImage(pipeBottomImg, obs.x, obs.gapY + gap / 2, pipeWidth, canvas.height);
     console.log(`Pipe drawn: x=${obs.x}, gapY=${obs.gapY}`);
 
     const birdCenterX = birdX + birdSize / 2;
@@ -190,7 +202,7 @@ function gameLoop(timestamp = 0) {
     }
 
     if (obs.x + pipeWidth < birdX && !obs.cleared) {
-      score += 50;
+      score += 100;
       obs.cleared = true;
       console.log('Pipe cleared: +50 points');
     }
@@ -207,7 +219,7 @@ function gameLoop(timestamp = 0) {
     console.log(`Obstruction spawned: x=${canvas.width}, y=${obsY}`);
   }
   obstructions.forEach((obs, i) => {
-    obs.x -= obstructionSpeed;
+    obs.x -= pipeSpeed; // Use pipeSpeed for obstructions too
     ctx.drawImage(obstructionImg, obs.x, obs.y, obstructionSize, obstructionSize);
     console.log(`Obstruction drawn: x=${obs.x}, y=${obs.y}`);
 
@@ -244,7 +256,7 @@ function gameLoop(timestamp = 0) {
     milestoneShown = true;
   }
 
-  requestAnimationFrame(gameLoop);
+  animationFrameId = requestAnimationFrame(gameLoop);
 }
 
 function circleRectCollides(cx, cy, radius, rect) {
@@ -275,64 +287,74 @@ function showMilestone() {
 }
 
 closeMilestone.addEventListener('click', () => {
-    startReviveTimer();
-    milestoneModal.style.display = 'none';
+  milestoneModal.style.display = 'none';
   isPaused = false;
   console.log('Milestone modal closed');
-  gameLoop();
-});
-
-milestoneForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  console.log('Milestone form submitted');
-  const name = milestoneNameInput.value.trim();
-  const email = milestoneEmailInput.value.trim();
-  const phone = milestonePhoneInput.value.trim();
-
-  if (!name || !email || !phone) {
-    alert('Please enter name, email, and phone.');
-    console.log('Milestone submission failed: Missing fields');
-    return;
-  }
-  if (!isValidIITMEmail(email)) {
-    alert('Please use a valid IIT Madras email.');
-    console.log('Milestone submission failed: Invalid email');
-    return;
-  }
-
-  const department = getDepartment(email);
-  localStorage.setItem('user', JSON.stringify({ name, email, department }));
-  milestoneModal.style.display = 'none';
-  // Trigger confetti effect
-  confetti({
-    particleCount: 100,
-    spread: 70,
-    origin: { y: 0.6 },
-    colors: ['#2eb191', '#ffd700', '#ff4d4d'],
-  });
-  console.log('Confetti triggered for milestone submission');
-  isPaused = false;
-  gameLoop();
+  if (!isGameOver) gameLoop();
 });
 
 function endGame() {
   lives--;
   console.log(`Life lost: lives=${lives}`);
+  updateLivesDisplay(); // Make sure you have this helper to refresh UI
+
   if (lives <= 0) {
+    lives = 0;
     isGameOver = true;
     finalScore.textContent = score;
     gameOverModal.style.display = 'flex';
+
+    // Show refer button only if not referred before
     referralButton.style.display = sessionStorage.getItem('referred') ? 'none' : 'block';
-    console.log('Game over: modal shown');
-    const user = JSON.parse(localStorage.getItem('user'));
-  // Use localStorage stored secretKey automatically
-updateHighScore(score).then(response => {
-  if (response.error) {
-    console.warn('Failed to update score:', response.error);
+
+    // Set up referral click event
+    referralButton.onclick = () => {
+  const gameLink = "https://tensors-bird-game.netlify.app/";
+  const message = encodeURIComponent(`Hey! Try this awesome game: ${gameLink}`);
+  window.open(`https://wa.me/?text=${message}`, '_blank');
+  if (!sessionStorage.getItem('referred')) {
+    sessionStorage.setItem('referred', 'true');
+    if (!extraLifeUsed) {
+      lives = 1;
+      extraLifeUsed = true;
+      // Hide game over modal and show refer modal styled like milestone
+      gameOverModal.style.display = 'none';
+      referModal.querySelector('h2').textContent = 'Congratulations!';
+      referModal.querySelector('p').textContent = 'Extra life granted!';
+      referModal.style.display = 'flex';
+      isPaused = true;
+      referralButton.style.display = 'none';
+      updateLivesDisplay();
+    } else {
+      gameOverModal.style.display = 'none';
+      referModal.querySelector('h2').textContent = 'Congratulations!';
+      referModal.querySelector('p').textContent = 'Extra life already used!';
+      referModal.style.display = 'flex';
+      isPaused = true;
+      referralButton.style.display = 'none';
+    }
   } else {
-    alert('High score updated successfully!');
+    gameOverModal.style.display = 'none';
+    referModal.querySelector('h2').textContent = 'Congratulations!';
+    referModal.querySelector('p').textContent = 'You already referred this session!';
+    referModal.style.display = 'flex';
+    isPaused = true;
+    referralButton.style.display = 'none';
   }
-});
+};
+
+
+    console.log('Game over: modal shown');
+
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    // Use localStorage stored secretKey automatically
+    updateHighScore(score).then(response => {
+      if (response.error) {
+        console.warn('Failed to update score:', response.error);
+      } 
+    });
+
   } else {
     resetGame(false, 0);
   }
@@ -349,7 +371,6 @@ referralButton.addEventListener('click', () => {
   const user = JSON.parse(localStorage.getItem('user'));
   if (!user || user.email === 'anonymous') {
     console.log('Referral skipped: No user logged in');
-    //alert('Please login to refer a friend.');
     return;
   }
   if (!sessionStorage.getItem('referred')) {
@@ -357,44 +378,24 @@ referralButton.addEventListener('click', () => {
     if (!extraLifeUsed) {
       lives = 1;
       extraLifeUsed = true;
-      console.log('Referral successful: Extra life granted');
-      alert('Shared! You gained an extra life.');
+      referModal.style.display = 'flex';
+      isPaused = true;
       referralButton.style.display = 'none';
-      startReviveTimer();
     } else {
-      console.log('Referral successful: Extra life already used');
       alert('Shared! Extra life already used this session.');
+      referralButton.style.display = 'none';
     }
-    referralButton.style.display = 'none';
   } else {
-    console.log('Referral skipped: Already referred this session');
     alert('You already referred this session.');
   }
 });
 
-function startReviveTimer() {
-    isPaused = true;
-  gameOverModal.classList.add('revive-glow');
-  let countdown = 3;
-  const timerDisplay = document.createElement('div');
-  timerDisplay.id = 'revive-timer';
-  timerDisplay.textContent = `Reviving in ${countdown}...`;
-  gameOverModal.parentNode.appendChild(timerDisplay);
-
-  const interval = setInterval(() => {
-    countdown--;
-    timerDisplay.textContent = `Reviving in ${countdown}...`;
-    if (countdown <= 0) {
-      clearInterval(interval);
-      gameOverModal.parentNode.removeChild(timerDisplay);
-      gameOverModal.style.display = 'none';
-      gameOverModal.classList.remove('revive-glow');
-      isPaused = false;
-      resetGame(true, score);
-      gameLoop();
-    }
-  }, 1000);
-}
+closeRefer.addEventListener('click', () => {
+  referModal.style.display = 'none';
+  isPaused = false;
+  isGameOver = false; // <-- Allow game to restart after referral
+  resetGame(false, score); // Restart with current score and extra life used
+});
 
 menuButton.addEventListener('click', () => {
   gameOverModal.style.display = 'none';
@@ -403,17 +404,24 @@ menuButton.addEventListener('click', () => {
   document.getElementById('start-page').style.display = 'flex';
   isGameOver = true;
   sessionStorage.removeItem('referred');
+  pipeSpeed = 5;
   console.log('Back to menu clicked, game stopped, referral reset');
 });
 
+// Always reset pipeSpeed when starting or resetting the game
 function resetGame(clearLives = true, score1 = 0) {
+  // Cancel previous animation frame
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+  }
   score = score1;
   obstacles = [];
   obstructions = [];
   birdY = canvas.height / 2;
   birdVelocity = 0;
   rotation = 0;
-  pipeSpeed = 5;
+  pipeSpeed = 5; // <-- Always reset speed here
   isGameOver = false;
   milestoneShown = false;
   lastPipeSpawn = 0;
@@ -422,11 +430,10 @@ function resetGame(clearLives = true, score1 = 0) {
     extraLifeUsed = false;
   } else {
     extraLifeUsed = true;
-} // Keep extra life used status
-    if (score >= 1000) {
-      milestoneShown = true; // Reset lives only if score is 1000 or more
-    }
-  
+  }
+  if (score >= 1000) {
+    milestoneShown = true;
+  }
   scoreDisplay.textContent = `Score: ${score} | Lives: ${lives}`;
   console.log(`Game reset: clearLives=${clearLives}, lives=${lives}, pipeSpeed=${pipeSpeed}`);
   gameLoop();
@@ -438,6 +445,12 @@ function startGame() {
     console.error('Cannot start game: Canvas or context missing');
     return;
   }
+  // Cancel previous animation frame
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+  }
+  pipeSpeed = 5; // <-- Always reset speed here too
   resizeCanvas();
   resetGame(true);
 }

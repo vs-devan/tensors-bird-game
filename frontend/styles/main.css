@@ -205,7 +205,7 @@ th, td {
 }
 
 #particles-canvas {
-  width: 100%;
+  width: 100vw;
   height: 100vh;
   position: absolute;
   top: 0;
@@ -322,11 +322,37 @@ th, td {
   box-shadow: 0 0 15px rgba(46, 177, 145, 0.7);
 }
 
-#signin-modal #close-signin,
+#signin-modal 
 #login-modal #close-login {
   margin-top: 0.8em;
   background: linear-gradient(135deg, #f44336, #a92e25);
 }
+
+/* Close icon (X) */
+.close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.close:hover {
+  color: #ff4d4d;
+}
+
+#milestone-modal h2 {
+  color: #ffd700;
+  text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+#milestone-modal p {
+  color: #f5f5f5;
+}
+
 
 /* Animation */
 @keyframes fadeInScale {

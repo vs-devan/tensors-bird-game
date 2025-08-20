@@ -35,27 +35,26 @@ if (!gameOverScreen) console.error('Game over screen not found in DOM');
 
 async function loadLeaderboard() {
   console.log('loadLeaderboard called');
+
   try {
-    const users = await fetchLeaderboard(); // Fetch from API
+    const leaderboardData = await fetchLeaderboard(); // Call API function
 
     leaderboardBody.innerHTML = '';
-    users.forEach((user, index) => {
+    leaderboardData.forEach((entry, index) => {
       const row = document.createElement('tr');
-
-      // Only add top5 if needed
-      if (index < 5 && isValidIITMEmail(user.email)) {
+      if (index < 5 && isValidIITMEmail(entry.email)) {
         row.classList.add('top5');
       }
-
       row.innerHTML = `
         <td>${index + 1}</td>
-        <td>${user.name} (${user.department})</td>
-        <td>${user.highScore}</td>
-        <td>${index < 5 ? '' : '-'}</td>
+        <td>${entry.name} (${entry.department})</td>
+        <td>${entry.highScore}</td>
+        <td>${index < 10 && isValidIITMEmail(entry.email) ? '' : ''}</td>
       `;
       leaderboardBody.appendChild(row);
     });
-    console.log('Leaderboard populated with API data');
+
+    console.log('Leaderboard populated from API');
   } catch (err) {
     console.error('Error loading leaderboard:', err);
   }
@@ -117,7 +116,8 @@ playButton.addEventListener('click', () => {
 
 const particlesCanvas = document.getElementById('particles-canvas');
 const particlesCtx = particlesCanvas && particlesCanvas.getContext('2d');
-if (!particlesCtx) console.error('Particles canvas context not found');
+if (!particlesCanvas) console.error('Particles canvas not found');
+else particlesCanvas.style.display = 'block'; // Make sure it's visible
 
 let particles = [];
 
@@ -158,6 +158,7 @@ function resizeParticles() {
     particlesCanvas.height = window.innerHeight;
     console.log(`Particles canvas resized: ${particlesCanvas.width}x${particlesCanvas.height}`);
     createParticles();
+    if (particlesCtx) drawParticles();
   }
 }
 
