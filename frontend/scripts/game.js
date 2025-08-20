@@ -149,7 +149,9 @@ if (isMobile()) {
   });
 }
 
+
 let animationFrameId = null;
+let lastFrameTime = null;
 
 function gameLoop(timestamp = 0) {
   if (isGameOver || isPaused || !ctx) {
@@ -157,14 +159,21 @@ function gameLoop(timestamp = 0) {
     return;
   }
 
-  console.log('Game loop running');
+  if (!lastFrameTime) lastFrameTime = timestamp;
+  const deltaTime = (timestamp - lastFrameTime) / 1000; // seconds
+  lastFrameTime = timestamp;
+
+  // Clamp deltaTime to avoid huge jumps (e.g. tab switch)
+  const dt = Math.min(deltaTime, 0.05); // max 50ms/frame
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // Increase speed based on score
   pipeSpeed = 5 + Math.floor(score / 1000);
 
-  birdVelocity += gravity;
-  birdY += birdVelocity;
+  // Physics: scale by dt
+  birdVelocity += gravity * dt * 60; // gravity per second
+  birdY += birdVelocity * dt * 60;   // velocity per second
   rotation = Math.min(Math.max(birdVelocity * 3, -20), 90);
   console.log(`Bird updated: y=${birdY}, velocity=${birdVelocity}, rotation=${rotation}`);
 
@@ -175,6 +184,7 @@ function gameLoop(timestamp = 0) {
   ctx.restore();
   console.log(`Bird drawn: x=${birdX}, y=${birdY}, rotation=${rotation}`);
 
+  // Pipe spawn logic: use time instead of frame count
   if ((timestamp - lastPipeSpawn > pipeSpacing / pipeSpeed) && Math.random() < 0.04) {
     const dynamicGap = Math.max(80, pipeGap - Math.floor(score / 200)); // Minimum gap is 80
     const gapY = Math.random() * (canvas.height - dynamicGap - 2 * pipeMinHeight) + pipeMinHeight;
@@ -185,7 +195,7 @@ function gameLoop(timestamp = 0) {
 
   obstacles.forEach((obs, i) => {
     const gap = obs.gap || pipeGap;
-    obs.x -= pipeSpeed;
+    obs.x -= pipeSpeed * dt * 60; // move per second
     ctx.drawImage(pipeTopImg, obs.x, obs.gapY - gap / 2 - canvas.height, pipeWidth, canvas.height);
     ctx.drawImage(pipeBottomImg, obs.x, obs.gapY + gap / 2, pipeWidth, canvas.height);
     console.log(`Pipe drawn: x=${obs.x}, gapY=${obs.gapY}`);
@@ -213,13 +223,14 @@ function gameLoop(timestamp = 0) {
     }
   });
 
+  // Obstruction spawn logic: use dt for movement
   if (Math.random() < 0.005) {
     const obsY = Math.random() * (canvas.height - obstructionSize);
     obstructions.push({ x: canvas.width, y: obsY });
     console.log(`Obstruction spawned: x=${canvas.width}, y=${obsY}`);
   }
   obstructions.forEach((obs, i) => {
-    obs.x -= pipeSpeed; // Use pipeSpeed for obstructions too
+    obs.x -= pipeSpeed * dt * 60; // move per second
     ctx.drawImage(obstructionImg, obs.x, obs.y, obstructionSize, obstructionSize);
     console.log(`Obstruction drawn: x=${obs.x}, y=${obs.y}`);
 
@@ -245,7 +256,8 @@ function gameLoop(timestamp = 0) {
     endGame();
   }
 
-  score += 1;
+  // Score: scale by dt so score increases at same rate
+  score += Math.round(dt * 60); // 60 points per second
   scoreDisplay.textContent = `Score: ${score} | Lives: ${lives}`;
   console.log(`Score updated: score=${score}, lives=${lives}`);
 
@@ -425,6 +437,7 @@ function resetGame(clearLives = true, score1 = 0) {
   isGameOver = false;
   milestoneShown = false;
   lastPipeSpawn = 0;
+  lastFrameTime = null; // Reset frame time for delta timing
   if (clearLives) {
     lives = 1;
     extraLifeUsed = false;
