@@ -180,7 +180,7 @@ function gameLoop(timestamp = 0) {
   console.log(`Bird drawn: x=${birdX}, y=${birdY}, rotation=${rotation}`);
 
   // Pipe spawn logic: use time instead of frame count
-  if ((timestamp - lastPipeSpawn > pipeSpacing / pipeSpeed) && Math.random() < 0.04) {
+  if ((timestamp - lastPipeSpawn > pipeSpacing / pipeSpeed * 0.8) && Math.random() < 0.04) {
     const dynamicGap = Math.max(80, pipeGap - Math.floor(score / 200)); // Minimum gap is 80
     const gapY = Math.random() * (canvas.height - dynamicGap - 2 * pipeMinHeight) + pipeMinHeight;
     obstacles.push({ x: canvas.width, gapY, cleared: false, gap: dynamicGap });
