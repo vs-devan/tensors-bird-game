@@ -79,8 +79,8 @@ export async function updateHighScore(highScore) {
 
 
 
-// ----------------- Leaderboard -----------------
-async function fetchLeaderboard() {
+
+export async function fetchLeaderboard() {
   try {
     const res = await fetch(`${API_BASE}/users/top10`);
     if (!res.ok) throw new Error('Failed to fetch leaderboard');
@@ -257,3 +257,4 @@ window.addEventListener('load', () => {
   hidePopup();
   fetchLeaderboard();
 });
+

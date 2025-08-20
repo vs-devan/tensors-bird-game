@@ -18,6 +18,11 @@ const signinEmailInput = document.getElementById('signin-email-input');
 const closeSignin = document.getElementById('close-signin');
 const leaderboardBody = document.querySelector('#leaderboard-table tbody');
 
+// Newly added
+const restartButton = document.getElementById('restart-button');
+const gameOverScreen = document.getElementById('game-over-screen');
+const gameCanvas = document.getElementById('game-canvas');
+
 if (!startPage) console.error('Start page not found in DOM');
 if (!canvas) console.error('Game canvas not found in DOM');
 if (!hud) console.error('HUD not found in DOM');
@@ -25,36 +30,35 @@ if (!playButton) console.error('Play button not found in DOM');
 if (!signinButton) console.error('Signin button not found in DOM');
 if (!signinModal) console.error('Signin modal not found in DOM');
 if (!leaderboardBody) console.error('Leaderboard body not found in DOM');
+if (!restartButton) console.error('Restart button not found in DOM');
+if (!gameOverScreen) console.error('Game over screen not found in DOM');
 
 async function loadLeaderboard() {
   console.log('loadLeaderboard called');
-  // Dummy data for testing
-  const dummyData = [
-    { name: 'Alice', department: 'CS', highScore: 1500, email: 'cs@smail.iitm.ac.in' },
-    { name: 'Bob', department: 'EE', highScore: 1400, email: 'ee@smail.iitm.ac.in' },
-    { name: 'Charlie', department: 'ME', highScore: 1300, email: 'me@smail.iitm.ac.in' },
-    { name: 'David', department: 'ED', highScore: 1200, email: 'ed@smail.iitm.ac.in' },
-    { name: 'Emma', department: 'CH', highScore: 1100, email: 'ch@smail.iitm.ac.in' },
-    { name: 'Frank', department: 'CS', highScore: 1000, email: 'cs@smail.iitm.ac.in' },
-    { name: 'Grace', department: 'CE', highScore: 900, email: 'ce@smail.iitm.ac.in' },
-    { name: 'Henry', department: 'BT', highScore: 800, email: 'bt@smail.iitm.ac.in' },
-    { name: 'Ivy', department: 'EE', highScore: 700, email: 'ee@smail.iitm.ac.in' },
-    { name: 'Jack', department: 'CS', highScore: 600, email: 'cs@smail.iitm.ac.in' }
-  ];
-  leaderboardBody.innerHTML = '';
-  dummyData.forEach((entry, index) => {
-    const row = document.createElement('tr');
-    row.classList.add(index < 5 && isValidIITMEmail(entry.email) ? 'top5' : '');
-    row.innerHTML = `
-      <td>${index + 1}</td>
-      <td>${entry.name} (${entry.department})</td>
+  try {
+    const users = await fetchLeaderboard(); // Fetch from API
 
-      <td>${entry.highScore}</td>
-      <td>${index < 10 && isValidIITMEmail(entry.email) ? '' : ''}</td>
-    `;
-    leaderboardBody.appendChild(row);
-  });
-  console.log('Leaderboard populated with dummy data');
+    leaderboardBody.innerHTML = '';
+    users.forEach((user, index) => {
+      const row = document.createElement('tr');
+
+      // Only add top5 if needed
+      if (index < 5 && isValidIITMEmail(user.email)) {
+        row.classList.add('top5');
+      }
+
+      row.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${user.name} (${user.department})</td>
+        <td>${user.highScore}</td>
+        <td>${index < 5 ? '' : '-'}</td>
+      `;
+      leaderboardBody.appendChild(row);
+    });
+    console.log('Leaderboard populated with API data');
+  } catch (err) {
+    console.error('Error loading leaderboard:', err);
+  }
 }
 
 loadLeaderboard();
@@ -111,7 +115,6 @@ playButton.addEventListener('click', () => {
   }
 });
 
-
 const particlesCanvas = document.getElementById('particles-canvas');
 const particlesCtx = particlesCanvas && particlesCanvas.getContext('2d');
 if (!particlesCtx) console.error('Particles canvas context not found');
@@ -158,19 +161,19 @@ function resizeParticles() {
   }
 }
 
-window.addEventListener('resize', () => {
-  resizeParticles();
-});
+window.addEventListener('resize', resizeParticles);
 
 createParticles();
 if (particlesCtx) drawParticles();
 resizeParticles();
 
-restartButton.addEventListener('click', () => {
-  gameOverScreen.style.display = 'none';
-  gameCanvas.style.display = 'block';
-  startGame();
-});
-
+// Restart button
+if (restartButton) {
+  restartButton.addEventListener('click', () => {
+    gameOverScreen.style.display = 'none';
+    gameCanvas.style.display = 'block';
+    startGame();
+  });
+}
 
 export { startGame };
