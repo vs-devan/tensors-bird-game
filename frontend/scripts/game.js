@@ -64,16 +64,22 @@ const flapBufferPromise = loadAudio('assets/flap-sound.mp3');
 const failBufferPromise = loadAudio('assets/fail-sound.mp3');
 const congratsBufferPromise = loadAudio('assets/congrats-sound.mp3');
 
+let currentAudioSource = null;
 async function playSound(bufferPromise) {
   if (audioContext.state === 'suspended') {
     await audioContext.resume();
   }
   bufferPromise.then(buffer => {
     if (buffer) {
+      if (currentAudioSource) {
+        try { currentAudioSource.stop(); } catch (e) {}
+      }
       const source = audioContext.createBufferSource();
       source.buffer = buffer;
       source.connect(audioContext.destination);
       source.start(0);
+      currentAudioSource = source;
+      source.onended = () => { currentAudioSource = null; };
     }
   }).catch(error => console.error('Play sound error:', error));
 }
@@ -403,6 +409,10 @@ closeRefer.addEventListener('click', () => {
   referModal.style.display = 'none';
   isPaused = false;
   isGameOver = false; // <-- Allow game to restart after referral
+  if (currentAudioSource) {
+    try { currentAudioSource.stop(); } catch (e) {}
+    currentAudioSource = null;
+  }
   resetGame(false, score); // Restart with current score and extra life used
 });
 
@@ -423,6 +433,10 @@ function resetGame(clearLives = true, score1 = 0) {
   if (animationFrameId) {
     cancelAnimationFrame(animationFrameId);
     animationFrameId = null;
+  }
+  if (currentAudioSource) {
+    try { currentAudioSource.stop(); } catch (e) {}
+    currentAudioSource = null;
   }
   score = score1;
   obstacles = [];
