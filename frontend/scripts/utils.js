@@ -18,7 +18,8 @@ function getDepartment(email) {
 }
 
 function isValidIITMEmail(email) {
-  const regex = /.*@(smail\.iitm\.ac\.in|iitm\.ac\.in)$/i;
+  // Pattern: 2 letters, 2 digits, 1 letter, 3 digits, then domain
+  const regex = /^[a-zA-Z]{2}\d{2}[a-zA-Z]{1}\d{3}@(smail\.iitm\.ac\.in|iitm\.ac\.in)$/i;
   return regex.test(email);
 }
 
