@@ -1,4 +1,5 @@
-// Tap to start overlay
+
+// Tap to start overlay styled like countdownOverlay
 let tapToStartOverlay = document.createElement('div');
 tapToStartOverlay.id = 'tap-to-start-overlay';
 tapToStartOverlay.style.position = 'fixed';
@@ -11,15 +12,15 @@ tapToStartOverlay.style.alignItems = 'center';
 tapToStartOverlay.style.justifyContent = 'center';
 tapToStartOverlay.style.background = 'rgba(0,0,0,0.3)';
 tapToStartOverlay.style.zIndex = '9999';
-tapToStartOverlay.style.fontSize = '2.5rem';
-tapToStartOverlay.style.color = '#2eb191';
+tapToStartOverlay.style.fontSize = '2rem';
+tapToStartOverlay.style.color = '#dbdbdaff';
 tapToStartOverlay.style.fontWeight = 'bold';
 tapToStartOverlay.style.fontFamily = 'Arial, sans-serif';
 tapToStartOverlay.style.pointerEvents = 'auto';
 tapToStartOverlay.style.textAlign = 'center';
 tapToStartOverlay.style.borderRadius = '12px';
 tapToStartOverlay.style.padding = '0';
-tapToStartOverlay.textContent = 'Tap to start';
+tapToStartOverlay.textContent = 'Tap the screen or press Space to start';
 
 let waitingToStart = false;
 
@@ -553,20 +554,27 @@ function startGame() {
   waitingToStart = true;
   document.body.appendChild(tapToStartOverlay);
 
-  function startOnInput() {
+  function startOnInput(e) {
     if (!waitingToStart) return;
-    waitingToStart = false;
-    if (document.body.contains(tapToStartOverlay)) {
-      document.body.removeChild(tapToStartOverlay);
+    // Only start on tap/click or space key
+    if (
+      (e.type === 'keydown' && (e.key === ' ' || e.key === 'Spacebar')) ||
+      e.type === 'touchstart' ||
+      e.type === 'mousedown'
+    ) {
+      waitingToStart = false;
+      if (document.body.contains(tapToStartOverlay)) {
+        document.body.removeChild(tapToStartOverlay);
+      }
+      gameLoop();
+      // Remove listeners after start
+      canvas.removeEventListener('touchstart', startOnInput);
+      document.removeEventListener('keydown', startOnInput);
+      canvas.removeEventListener('mousedown', startOnInput);
     }
-    gameLoop();
-    // Remove listeners after start
-    canvas.removeEventListener('touchstart', startOnInput);
-    document.removeEventListener('keydown', startOnInput);
-    canvas.removeEventListener('mousedown', startOnInput);
   }
 
-  // Listen for tap/click or key press
+  // Listen for tap/click or space key press
   canvas.addEventListener('touchstart', startOnInput);
   canvas.addEventListener('mousedown', startOnInput);
   document.addEventListener('keydown', startOnInput);
