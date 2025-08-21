@@ -1,3 +1,28 @@
+// Tap to start overlay
+let tapToStartOverlay = document.createElement('div');
+tapToStartOverlay.id = 'tap-to-start-overlay';
+tapToStartOverlay.style.position = 'fixed';
+tapToStartOverlay.style.top = '0';
+tapToStartOverlay.style.left = '0';
+tapToStartOverlay.style.width = '100vw';
+tapToStartOverlay.style.height = '100vh';
+tapToStartOverlay.style.display = 'flex';
+tapToStartOverlay.style.alignItems = 'center';
+tapToStartOverlay.style.justifyContent = 'center';
+tapToStartOverlay.style.background = 'rgba(0,0,0,0.3)';
+tapToStartOverlay.style.zIndex = '9999';
+tapToStartOverlay.style.fontSize = '2.5rem';
+tapToStartOverlay.style.color = '#2eb191';
+tapToStartOverlay.style.fontWeight = 'bold';
+tapToStartOverlay.style.fontFamily = 'Arial, sans-serif';
+tapToStartOverlay.style.pointerEvents = 'auto';
+tapToStartOverlay.style.textAlign = 'center';
+tapToStartOverlay.style.borderRadius = '12px';
+tapToStartOverlay.style.padding = '0';
+tapToStartOverlay.textContent = 'Tap to start';
+
+let waitingToStart = false;
+
 // Countdown overlay element
 
 let countdownOverlay = document.createElement('div');
@@ -523,6 +548,28 @@ function startGame() {
   pipeSpeed = 5; // <-- Always reset speed here too
   resizeCanvas();
   resetGame(true);
+
+  // Show tap to start overlay
+  waitingToStart = true;
+  document.body.appendChild(tapToStartOverlay);
+
+  function startOnInput() {
+    if (!waitingToStart) return;
+    waitingToStart = false;
+    if (document.body.contains(tapToStartOverlay)) {
+      document.body.removeChild(tapToStartOverlay);
+    }
+    gameLoop();
+    // Remove listeners after start
+    canvas.removeEventListener('touchstart', startOnInput);
+    document.removeEventListener('keydown', startOnInput);
+    canvas.removeEventListener('mousedown', startOnInput);
+  }
+
+  // Listen for tap/click or key press
+  canvas.addEventListener('touchstart', startOnInput);
+  canvas.addEventListener('mousedown', startOnInput);
+  document.addEventListener('keydown', startOnInput);
 }
 
 export { startGame };
