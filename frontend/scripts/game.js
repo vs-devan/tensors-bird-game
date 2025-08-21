@@ -367,35 +367,36 @@ function endGame() {
   const gameLink = "https://tensors-bird-game.netlify.app/";
   const message = encodeURIComponent(`Hey! Try this awesome game by Tensors and stand a chance to get selected for direct interview to the team: ${gameLink}`);
   window.open(`https://wa.me/?text=${message}`, '_blank');
-  if (!sessionStorage.getItem('referred')) {
-    sessionStorage.setItem('referred', 'true');
-    if (!extraLifeUsed) {
-      lives = 1;
-      extraLifeUsed = true;
-      // Hide game over modal and show refer modal styled like milestone
-      gameOverModal.style.display = 'none';
-      referModal.querySelector('h2').textContent = 'Congratulations!';
-      referModal.querySelector('p').textContent = 'Extra life granted!';
-      referModal.style.display = 'flex';
-      isPaused = true;
-      referralButton.style.display = 'none';
-      updateLivesDisplay();
+  setTimeout(() => {
+    if (!sessionStorage.getItem('referred')) {
+      sessionStorage.setItem('referred', 'true');
+      if (!extraLifeUsed) {
+        lives = 1;
+        extraLifeUsed = true;
+        gameOverModal.style.display = 'none';
+        referModal.querySelector('h2').textContent = 'Congratulations!';
+        referModal.querySelector('p').textContent = 'Extra life granted!';
+        referModal.style.display = 'flex';
+        isPaused = true;
+        referralButton.style.display = 'none';
+        updateLivesDisplay();
+      } else {
+        gameOverModal.style.display = 'none';
+        referModal.querySelector('h2').textContent = 'Congratulations!';
+        referModal.querySelector('p').textContent = 'Extra life granted!';
+        referModal.style.display = 'flex';
+        isPaused = true;
+        referralButton.style.display = 'none';
+      }
     } else {
       gameOverModal.style.display = 'none';
       referModal.querySelector('h2').textContent = 'Congratulations!';
-      referModal.querySelector('p').textContent = 'Extra life granted!';
+      referModal.querySelector('p').textContent = 'Extra Life granted!';
       referModal.style.display = 'flex';
       isPaused = true;
       referralButton.style.display = 'none';
     }
-  } else {
-    gameOverModal.style.display = 'none';
-    referModal.querySelector('h2').textContent = 'Congratulations!';
-    referModal.querySelector('p').textContent = 'Extra Life granted!';
-    referModal.style.display = 'flex';
-    isPaused = true;
-    referralButton.style.display = 'none';
-  }
+  }, 1500);
 };
 
 
@@ -443,7 +444,7 @@ referralButton.addEventListener('click', () => {
       referralButton.style.display = 'none';
     }
   } else {
-    alert('You already referred this session.');
+    alert('Extra Life Granted.');
   }
 });
 
