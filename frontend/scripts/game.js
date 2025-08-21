@@ -391,7 +391,7 @@ function endGame() {
   } else {
     gameOverModal.style.display = 'none';
     referModal.querySelector('h2').textContent = 'Congratulations!';
-    referModal.querySelector('p').textContent = 'You already referred this session!';
+    referModal.querySelector('p').textContent = 'Extra Life granted!';
     referModal.style.display = 'flex';
     isPaused = true;
     referralButton.style.display = 'none';
