@@ -1,3 +1,37 @@
+// Countdown overlay element
+let countdownOverlay = document.createElement('div');
+countdownOverlay.id = 'countdown-overlay';
+countdownOverlay.style.position = 'fixed';
+countdownOverlay.style.top = '0';
+countdownOverlay.style.left = '0';
+countdownOverlay.style.width = '100vw';
+countdownOverlay.style.height = '100vh';
+countdownOverlay.style.display = 'flex';
+countdownOverlay.style.alignItems = 'center';
+countdownOverlay.style.justifyContent = 'center';
+countdownOverlay.style.background = 'rgba(0,0,0,0.6)';
+countdownOverlay.style.zIndex = '9999';
+countdownOverlay.style.fontSize = '4rem';
+countdownOverlay.style.color = '#ffd700';
+countdownOverlay.style.fontWeight = 'bold';
+countdownOverlay.style.fontFamily = 'Arial, sans-serif';
+countdownOverlay.style.pointerEvents = 'none';
+
+function showCountdown(callback) {
+  let count = 3;
+  countdownOverlay.textContent = `Reviving in ${count}...`;
+  document.body.appendChild(countdownOverlay);
+  let interval = setInterval(() => {
+    count--;
+    if (count > 0) {
+      countdownOverlay.textContent = `Reviving in ${count}...`;
+    } else {
+      clearInterval(interval);
+      document.body.removeChild(countdownOverlay);
+      if (callback) callback();
+    }
+  }, 700);
+}
 console.log('Starting game.js import');
 
 import { isMobile } from './utils.js';
@@ -304,8 +338,10 @@ closeMilestone.addEventListener('click', () => {
   isPaused = false;
   milestoneShown = true;
   console.log('Milestone modal closed');
-  // Resume game safely after milestone by resetting with current score and lives
-  resetGame(false, score);
+  // Show countdown before resuming game
+  showCountdown(() => {
+    resetGame(false, score);
+  });
 });
 
 function endGame() {
@@ -325,7 +361,7 @@ function endGame() {
     // Set up referral click event
     referralButton.onclick = () => {
   const gameLink = "https://tensors-bird-game.netlify.app/";
-  const message = encodeURIComponent(`Hey! Try this awesome game: ${gameLink}`);
+  const message = encodeURIComponent(`Hey! Try this awesome game by Tensors and stand a chance to get selected for direct interview to the team: ${gameLink}`);
   window.open(`https://wa.me/?text=${message}`, '_blank');
   if (!sessionStorage.getItem('referred')) {
     sessionStorage.setItem('referred', 'true');
@@ -343,7 +379,7 @@ function endGame() {
     } else {
       gameOverModal.style.display = 'none';
       referModal.querySelector('h2').textContent = 'Congratulations!';
-      referModal.querySelector('p').textContent = 'Extra life already used!';
+      referModal.querySelector('p').textContent = 'Extra life granted!';
       referModal.style.display = 'flex';
       isPaused = true;
       referralButton.style.display = 'none';
@@ -393,11 +429,14 @@ referralButton.addEventListener('click', () => {
     if (!extraLifeUsed) {
       lives = 1;
       extraLifeUsed = true;
-      referModal.style.display = 'flex';
-      isPaused = true;
       referralButton.style.display = 'none';
+      // Add delay before showing modal
+      setTimeout(() => {
+        referModal.style.display = 'flex';
+        isPaused = true;
+      }, 1500); // 1.5 second delay
     } else {
-      alert('Shared! Extra life already used this session.');
+      alert('Extra life has granted.');
       referralButton.style.display = 'none';
     }
   } else {
@@ -413,7 +452,10 @@ closeRefer.addEventListener('click', () => {
     try { currentAudioSource.stop(); } catch (e) {}
     currentAudioSource = null;
   }
-  resetGame(false, score); // Restart with current score and extra life used
+  // Show countdown before resuming game
+  showCountdown(() => {
+    resetGame(false, score);
+  });
 });
 
 menuButton.addEventListener('click', () => {

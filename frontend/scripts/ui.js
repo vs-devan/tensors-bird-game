@@ -80,17 +80,18 @@ signinForm.addEventListener('submit', (e) => {
   }
 
   if (!isValidIITMEmail(email)) {
-    alert('Please use a valid IIT Madras email (e.g., @smail.iitm.ac.in or @iitm.ac.in).');
+    alert('Please use a valid IIT Madras email');
     console.log('Signin failed: Invalid email');
     return;
-  } else {
-    const department = getDepartment(email);
-    localStorage.setItem('user', JSON.stringify({ name, email, department }));
-    alert('Login successful! Your scores will appear on the leaderboard.');
-    console.log('Signin successful:', { name, email, department });
-    signinModal.style.display = 'none';
-    loadLeaderboard();
   }
+
+  // Only register if valid
+  const department = getDepartment(email);
+  localStorage.setItem('user', JSON.stringify({ name, email, department }));
+  alert('Login successful! Your scores will appear on the leaderboard.');
+  console.log('Signin successful:', { name, email, department });
+  signinModal.style.display = 'none';
+  loadLeaderboard();
 });
 
 closeSignin.addEventListener('click', () => {

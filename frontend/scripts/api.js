@@ -118,9 +118,20 @@ signinForm.addEventListener('submit', async (e) => {
   const name = document.getElementById('signin-name-input').value.trim();
   const email = document.getElementById('signin-email-input').value.trim();
   const department = email.slice(0, 2).toUpperCase();
-  
+
+  // Import isValidIITMEmail from utils.js
+  // (assume global or window for browser, or import if using modules)
+  let isValid = false;
+  if (typeof isValidIITMEmail === 'function') {
+    isValid = isValidIITMEmail(email);
+  } else if (window.isValidIITMEmail) {
+    isValid = window.isValidIITMEmail(email);
+  }
+
   if (!name || !email || !department) {
-    alert('Please fill all fields');
+    return;
+  }
+  if (!isValid) {
     return;
   }
 
@@ -160,10 +171,6 @@ signinForm.addEventListener('submit', async (e) => {
         <h3 style="margin-top: 0; color: #237804;">✅ Successfully Registered!</h3>
         <p style="margin: 6px 0;"><b>Name:</b> ${currentUser.name}</p>
         <p style="margin: 6px 0;"><b>Email:</b> ${currentUser.email}</p>
-        <p style="margin: 6px 0; background: #fffbe6; padding: 5px 8px; border-radius: 5px; border: 1px dashed #faad14;">
-          <b>Secret Key:</b> ${authToken}
-        </p>
-        <small style="color: #8c8c8c;">💾 Save this key to resume your game later.</small>
       </div>
     `);
 
