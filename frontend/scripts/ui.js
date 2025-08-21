@@ -51,7 +51,27 @@ async function loadLeaderboard() {
         <td>${entry.highScore}</td>
         <td>${index < 10 && isValidIITMEmail(entry.email) ? '' : ''}</td>
       `;
+      // Only show first 6 rows, hide the rest by default
+      if (index < 6) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
       leaderboardBody.appendChild(row);
+    });
+
+    // Make the table scrollable and reveal hidden rows on scroll
+    const leaderboardTable = document.getElementById('leaderboard-table');
+    leaderboardTable.parentElement.style.maxHeight = '300px';
+    leaderboardTable.parentElement.style.overflowY = 'auto';
+    leaderboardTable.parentElement.addEventListener('scroll', function () {
+      const rows = leaderboardBody.querySelectorAll('tr');
+      rows.forEach((row, idx) => {
+        // Reveal rows as user scrolls down
+        if (this.scrollTop > 0 && idx >= 6) {
+          row.style.display = '';
+        }
+      });
     });
 
     console.log('Leaderboard populated from API');
