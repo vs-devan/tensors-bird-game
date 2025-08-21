@@ -438,9 +438,8 @@ referralButton.addEventListener('click', () => {
       setTimeout(() => {
         referModal.style.display = 'flex';
         isPaused = true;
-      }, 1500); // 1.5 second delay
+      }, 2000); // 1.5 second delay
     } else {
-      alert('Extra life has granted.');
       referralButton.style.display = 'none';
     }
   } else {
