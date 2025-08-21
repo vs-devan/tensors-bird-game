@@ -1,4 +1,5 @@
 // Countdown overlay element
+
 let countdownOverlay = document.createElement('div');
 countdownOverlay.id = 'countdown-overlay';
 countdownOverlay.style.position = 'fixed';
@@ -9,22 +10,25 @@ countdownOverlay.style.height = '100vh';
 countdownOverlay.style.display = 'flex';
 countdownOverlay.style.alignItems = 'center';
 countdownOverlay.style.justifyContent = 'center';
-countdownOverlay.style.background = 'rgba(0,0,0,0.6)';
+countdownOverlay.style.background = 'rgba(0,0,0,0.3)';
 countdownOverlay.style.zIndex = '9999';
-countdownOverlay.style.fontSize = '4rem';
+countdownOverlay.style.fontSize = '2rem';
 countdownOverlay.style.color = '#ffd700';
 countdownOverlay.style.fontWeight = 'bold';
 countdownOverlay.style.fontFamily = 'Arial, sans-serif';
 countdownOverlay.style.pointerEvents = 'none';
+countdownOverlay.style.textAlign = 'center';
+countdownOverlay.style.borderRadius = '12px';
+countdownOverlay.style.padding = '0';
 
 function showCountdown(callback) {
   let count = 3;
-  countdownOverlay.textContent = `Reviving in ${count}...`;
+  countdownOverlay.textContent = `Resuming in ${count}...`;
   document.body.appendChild(countdownOverlay);
   let interval = setInterval(() => {
     count--;
     if (count > 0) {
-      countdownOverlay.textContent = `Reviving in ${count}...`;
+      countdownOverlay.textContent = `Resuming in ${count}...`;
     } else {
       clearInterval(interval);
       document.body.removeChild(countdownOverlay);
