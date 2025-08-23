@@ -367,7 +367,7 @@ function endGame() {
 
     // Set up referral click event
     referralButton.onclick = () => {
-  const gameLink = "https://tensors-bird-game.netlify.app/";
+  const gameLink = "https://tensors-tikos-flight.netlify.app/";
   const message = encodeURIComponent(`Hey! Try this awesome game by Tensors and stand a chance to get selected for direct interview to the team: ${gameLink}`);
   window.open(`https://wa.me/?text=${message}`, '_blank');
   setTimeout(() => {
