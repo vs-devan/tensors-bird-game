@@ -110,36 +110,41 @@ export async function fetchLeaderboard() {
     console.error('Error fetching leaderboard:', err);
   }
 }
+// ----------------- Constants -----------------
 
-// ----------------- Register -----------------
+// ----------------- Signin -----------------
 signinForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const name = document.getElementById('signin-name-input').value.trim();
   const email = document.getElementById('signin-email-input').value.trim();
+
+  if (!name || !email) {
+    alert('Name and Email are required');
+    return;
+  }
+
+  // Department: first 2 letters of email
   const department = email.slice(0, 2).toUpperCase();
 
-  // Import isValidIITMEmail from utils.js
-  // (assume global or window for browser, or import if using modules)
-  let isValid = false;
+  // Validate IITM Email if function exists
+  let isValid = true;
   if (typeof isValidIITMEmail === 'function') {
     isValid = isValidIITMEmail(email);
   } else if (window.isValidIITMEmail) {
     isValid = window.isValidIITMEmail(email);
   }
-
-  if (!name || !email || !department) {
-    return;
-  }
   if (!isValid) {
+    alert('Please enter a valid IITM Email');
     return;
   }
 
   try {
+    console.log('Sending signup:', { name, email, department });
     const res = await fetch(`${API_BASE}/users`, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ name, email, department })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, department }),
     });
 
     const data = await res.json();
@@ -148,8 +153,9 @@ signinForm.addEventListener('submit', async (e) => {
       return;
     }
 
-    currentUser = data.data; // backend sends user object as data
-    authToken = data.secretKey; // store secret key from backend
+    // Save user & secretKey
+    currentUser = data.data;
+    authToken = data.secretKey;
     localStorage.setItem('secretKey', authToken);
 
     hideSigninModal();
@@ -171,11 +177,13 @@ signinForm.addEventListener('submit', async (e) => {
         <h3 style="margin-top: 0; color: #237804;">✅ Successfully Registered!</h3>
         <p style="margin: 6px 0;"><b>Name:</b> ${currentUser.name}</p>
         <p style="margin: 6px 0;"><b>Email:</b> ${currentUser.email}</p>
+        <p style="margin: 6px 0;"><b>Secret Key:</b> ${authToken}</p>
       </div>
     `);
 
     fetchLeaderboard();
   } catch (err) {
+    console.error('Signup error:', err);
     alert('Registration error: ' + err.message);
   }
 });
@@ -191,21 +199,20 @@ loginForm.addEventListener('submit', async (e) => {
   }
 
   try {
+    console.log('Logging in with key:', secretKey);
     const res = await fetch(`${API_BASE}/users/login`, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ secretKey }) // must match backend field name
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secretKey }),
     });
 
     const data = await res.json();
-    console.log('Login response:', data);
-
     if (!res.ok) {
       alert(data.error || 'Login failed');
       return;
     }
 
-    currentUser = data.data || data.user;
+    currentUser = data.data;
     authToken = secretKey;
     localStorage.setItem('secretKey', authToken);
 
@@ -215,9 +222,9 @@ loginForm.addEventListener('submit', async (e) => {
     startPage.style.display = 'flex';
 
     showPopup(`Welcome back ${currentUser.name}! You can now play your game.`);
-
     fetchLeaderboard();
   } catch (err) {
+    console.error('Login error:', err);
     alert('Login error: ' + err.message);
   }
 });
@@ -237,7 +244,6 @@ resumeButton.addEventListener('click', () => {
   disablePlayButton();
 });
 
-// ✅ Play button — dynamic import to avoid circular dependency issue
 playButton.addEventListener('click', async () => {
   hideSigninModal();
   hideLoginModal();
@@ -250,7 +256,6 @@ playButton.addEventListener('click', async () => {
   startGame(currentUser, authToken);
 });
 
-// Close modal buttons
 closeSigninBtn.addEventListener('click', () => {
   hideSigninModal();
   enablePlayButton();
@@ -263,8 +268,7 @@ closeLoginBtn.addEventListener('click', () => {
   startPage.style.display = 'flex';
 });
 
-// Close popup button
-popupCloseBtn.addEventListener('click', () => { hidePopup(); });
+popupCloseBtn.addEventListener('click', () => hidePopup());
 
 // ----------------- Init -----------------
 window.addEventListener('load', () => {
@@ -283,4 +287,3 @@ window.addEventListener('load', () => {
     disablePlayButton();
   }
 });
-
