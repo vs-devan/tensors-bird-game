@@ -111,6 +111,12 @@ export async function fetchLeaderboard() {
   }
 }
 // ----------------- Constants -----------------
+// ----------------- IITM Email Validation -----------------
+function isValidIITMEmail(email) {
+  // Must be 8 alphanumeric characters + @smail.iitm.ac.in
+  const regex = /^[a-zA-Z0-9]{8}@smail\.iitm\.ac\.in$/;
+  return regex.test(email);
+}
 
 // ----------------- Signin -----------------
 signinForm.addEventListener('submit', async (e) => {
@@ -127,14 +133,8 @@ signinForm.addEventListener('submit', async (e) => {
   // Department: first 2 letters of email
   const department = email.slice(0, 2).toUpperCase();
 
-  // Validate IITM Email if function exists
-  let isValid = true;
-  if (typeof isValidIITMEmail === 'function') {
-    isValid = isValidIITMEmail(email);
-  } else if (window.isValidIITMEmail) {
-    isValid = window.isValidIITMEmail(email);
-  }
-  if (!isValid) {
+  // Validate IITM Email
+  if (!isValidIITMEmail(email)) {
     alert('Please enter a valid IITM Email');
     return;
   }
